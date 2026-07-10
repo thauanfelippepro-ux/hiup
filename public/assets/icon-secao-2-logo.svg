@@ -1,0 +1,24 @@
+<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+<foreignObject x="0.000389099" y="-9.91821e-05" width="159.8" height="159.8"><div xmlns="http://www.w3.org/1999/xhtml" style="backdrop-filter:blur(4.5px);clip-path:url(#bgblur_0_389_814_clip_path);height:100%;width:100%"></div></foreignObject><g filter="url(#filter0_d_389_814)" data-figma-bg-blur-radius="9">
+<rect x="37.4004" y="17.3999" width="85" height="85" rx="22" fill="url(#paint0_linear_389_814)" fill-opacity="0.25" shape-rendering="crispEdges"/>
+<rect x="37.4684" y="17.4679" width="84.864" height="84.864" rx="21.932" stroke="#E95004" stroke-width="0.136" shape-rendering="crispEdges"/>
+<path d="M85.4396 61.8134L85.4441 51.5939L73.6608 63.4696L66.4189 70.7994L66.4004 58.3073L68.1801 56.4505L79.2484 45.2543L84.978 39.4095L93.5036 39.3999L93.5075 65.6346L82.6888 76.5748L77.9774 81.3423L77.9666 61.821L85.4396 61.8134Z" fill="#E95004"/>
+</g>
+<defs>
+<filter id="filter0_d_389_814" x="0.000389099" y="-9.91821e-05" width="159.8" height="159.8" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="20"/>
+<feGaussianBlur stdDeviation="18.7"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.913725 0 0 0 0 0.313726 0 0 0 0 0.0156863 0 0 0 0.69 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_389_814"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_389_814" result="shape"/>
+</filter>
+<clipPath id="bgblur_0_389_814_clip_path" transform="translate(-0.000389099 9.91821e-05)"><rect x="37.4004" y="17.3999" width="85" height="85" rx="22"/>
+</clipPath><linearGradient id="paint0_linear_389_814" x1="177.4" y1="-161.6" x2="37.4004" y2="129.4" gradientUnits="userSpaceOnUse">
+<stop stop-color="#E95004"/>
+<stop offset="1"/>
+</linearGradient>
+</defs>
+</svg>
