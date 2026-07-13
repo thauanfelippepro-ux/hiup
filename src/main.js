@@ -10,15 +10,31 @@ import './motion/config.js'
 import { prefersReducedMotion } from './motion/config.js'
 import { initMotion } from './motion/scan.js'
 
-// The nav is position:fixed, so it never moves through the document flow —
-// wiring it into the generic scroll-linked scanner (like every other
-// section) made it reverse to hidden any time the user scrolled back near
-// the top, which is exactly the "navbar disappears" failure the animation
-// spec explicitly rules out. A fixed nav gets a single play-once entrance
-// on load instead, with no ScrollTrigger involved at all.
+// The nav (position:fixed) and the hero (fully above the fold) both need a
+// one-time load-in sequence, not the generic scroll-linked scanner used for
+// every section below the fold. Two reasons this is separate from scan.js:
+//  - nav never moves through the document flow, so a scroll-position-based
+//    toggle reverses it to invisible whenever the user scrolls back near
+//    the top -- the "navbar disappears" failure the animation spec rules
+//    out.
+//  - hero content sits at the very top of the page. A "top 85%" scroll
+//    trigger isn't satisfied for elements anchored near the *bottom* of the
+//    hero viewport (the side eyebrow, the caption) until the user scrolls
+//    down some amount, even though that content is already fully visible
+//    on load -- it should appear together with the headline, not later.
 const nav = document.querySelector('.nav')
-if (nav && !prefersReducedMotion()) {
-  gsap.fromTo(nav, { opacity: 0, y: -24 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' })
+const heroEyebrowTop = document.querySelector('.hero__eyebrow--top')
+const heroLines = document.querySelectorAll('.hero__headline .hero__line')
+const heroEyebrowSide = document.querySelector('.hero__eyebrow--side')
+const heroCaption = document.querySelector('.hero__caption')
+
+if (!prefersReducedMotion()) {
+  const tl = gsap.timeline({ defaults: { ease: 'power2.out' } })
+  if (nav) tl.fromTo(nav, { opacity: 0, y: -24 }, { opacity: 1, y: 0, duration: 0.6 })
+  if (heroEyebrowTop) tl.fromTo(heroEyebrowTop, { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.5 }, 0.2)
+  if (heroLines.length) tl.fromTo(heroLines, { opacity: 0, y: 48 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.12 }, 0.35)
+  if (heroEyebrowSide) tl.fromTo(heroEyebrowSide, { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: 0.5 }, 0.6)
+  if (heroCaption) tl.fromTo(heroCaption, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5 }, 0.7)
 }
 
 // The Host Grotesk webfont can finish loading/swapping in after ScrollTrigger
@@ -31,7 +47,20 @@ if (document.fonts && document.fonts.ready) {
   document.fonts.ready.then(() => ScrollTrigger.refresh())
 }
 
-initMotion()
+// section6's <spline-viewer> loads its 3D scene from a remote URL and keeps
+// resizing/shifting section6's layout well after the page's own load event
+// -- for an unpredictable amount of time, unlike fonts or the pin setup
+// above (which settle synchronously). A ResizeObserver on the whole page
+// catches that (and any future similar async content: late-loading images,
+// embeds, etc.) generically, instead of special-casing each component.
+if ('ResizeObserver' in window) {
+  let resizeRefreshTimer
+  const resizeObserver = new ResizeObserver(() => {
+    clearTimeout(resizeRefreshTimer)
+    resizeRefreshTimer = setTimeout(() => ScrollTrigger.refresh(), 200)
+  })
+  resizeObserver.observe(document.body)
+}
 
 const gridOverlay = document.querySelector('.grid-overlay')
 const spotlight = document.querySelector('.grid-overlay__spotlight')
@@ -524,3 +553,13 @@ document.querySelectorAll('[data-modal-close]').forEach((closer) => {
 document.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') closeModal()
 })
+
+// Runs last, after section4/team/process have already created their pinned
+// ScrollTriggers (and inserted their pin-spacers) and after the Swiper
+// carousels have initialized. initMotion() measures every declaratively
+// animated element's document position to build its own ScrollTriggers --
+// if it ran earlier (as it originally did, right after this file's imports),
+// elements positioned after section4 in the DOM would be measured against a
+// document that was still missing section4's eventual pin-spacer height,
+// permanently offsetting their trigger start/end by that missing amount.
+initMotion()

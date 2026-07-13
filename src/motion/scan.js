@@ -40,7 +40,14 @@ function makeScrollTrigger(trigger) {
   return {
     trigger,
     start: 'top 85%',
-    end: 'bottom 15%',
+    // 'bottom top' (not 'bottom 15%'): the reveal only reverses once the
+    // element has scrolled fully past the top of the viewport. A tighter
+    // exit window closes faster than a real scroll (trackpad flick, fast
+    // wheel) can carry the tween through its duration/delay, so onLeave
+    // fires and reverses the tween before it ever visually plays -- the
+    // element just never appears. This was the actual root cause behind
+    // "texts sumindo" across the site, not a one-off per-section bug.
+    end: 'bottom top',
     toggleActions: 'play reverse play reverse',
   }
 }
