@@ -7,6 +7,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Swiper from 'swiper'
 import { Autoplay, Pagination } from 'swiper/modules'
 import './motion/config.js'
+import { initMotion } from './motion/scan.js'
 
 // The Host Grotesk webfont can finish loading/swapping in after ScrollTrigger
 // has already measured pin start/end positions from the fallback font's
@@ -17,6 +18,8 @@ import './motion/config.js'
 if (document.fonts && document.fonts.ready) {
   document.fonts.ready.then(() => ScrollTrigger.refresh())
 }
+
+initMotion()
 
 const gridOverlay = document.querySelector('.grid-overlay')
 const spotlight = document.querySelector('.grid-overlay__spotlight')
