@@ -6,8 +6,17 @@ import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Swiper from 'swiper'
 import { Autoplay, Pagination } from 'swiper/modules'
+import './motion/config.js'
 
-gsap.registerPlugin(ScrollTrigger)
+// The Host Grotesk webfont can finish loading/swapping in after ScrollTrigger
+// has already measured pin start/end positions from the fallback font's
+// metrics. That leaves every pinned section (section4, team) with a stale
+// boundary, which shows up as a jump/duplicate-render flash the first time
+// the user scrolls into one. Recalculating once the real font is ready
+// keeps every pin's measurements accurate for the whole session.
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(() => ScrollTrigger.refresh())
+}
 
 const gridOverlay = document.querySelector('.grid-overlay')
 const spotlight = document.querySelector('.grid-overlay__spotlight')
@@ -118,6 +127,184 @@ if (section4 && section4Cards.length > 1) {
           cardParts.flatMap((p) => [p.num, p.cat, p.text]),
           { clearProps: 'color' },
         )
+      }
+    },
+  })
+}
+
+const team = document.querySelector('.team')
+const teamItems = gsap.utils.toArray('.team__item[data-index]')
+const teamSlides = gsap.utils.toArray('.team__slide[data-index]')
+const teamStrip = document.querySelector('.team__strip')
+const teamStage = document.querySelector('.team__stage')
+const teamList = document.querySelector('.team__list')
+const teamListViewport = document.querySelector('.team__list-viewport')
+
+if (
+  team &&
+  teamStrip &&
+  teamStage &&
+  teamList &&
+  teamListViewport &&
+  teamItems.length > 1 &&
+  teamItems.length === teamSlides.length
+) {
+  const STEP = 320
+
+  ScrollTrigger.matchMedia({
+    '(min-width: 721px)': () => {
+      const slide = teamSlides[0]
+      const slideHeight = slide.offsetHeight
+      const slideGap = parseFloat(getComputedStyle(slide).marginBottom) || 0
+      const slideStep = slideHeight + slideGap
+      const slideInitialY = (teamStage.offsetHeight - slideHeight) / 2
+
+      const item = teamItems[0]
+      const itemHeight = item.offsetHeight
+      const itemGap = parseFloat(getComputedStyle(item).marginBottom) || 0
+      const itemStep = itemHeight + itemGap
+      const itemInitialY = (teamListViewport.offsetHeight - itemHeight) / 2
+
+      const pinDistance = (teamItems.length - 1) * STEP
+      const gridLayers = gsap.utils.toArray('.grid-overlay__base, .grid-overlay__spotlight')
+
+      gsap.set(teamStrip, { y: slideInitialY })
+      gsap.set(teamList, { y: itemInitialY })
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: team,
+          start: 'top top',
+          end: `+=${pinDistance}`,
+          scrub: 0.35,
+          pin: '.team__pin',
+          onUpdate(self) {
+            const idx = Math.round(self.progress * (teamItems.length - 1))
+            teamSlides.forEach((s, i) => s.classList.toggle('team__slide--active', i === idx))
+            teamItems.forEach((it, i) => it.classList.toggle('team__item--active', i === idx))
+
+            const y = self.progress * pinDistance
+            gsap.set(gridLayers, { y })
+            gridPinOffset = y
+          },
+        },
+      })
+
+      teamItems.slice(1).forEach((nextItem, i) => {
+        const prevItem = teamItems[i]
+
+        tl.to(teamStrip, { y: slideInitialY - slideStep * (i + 1), duration: 1, ease: 'none' }, i)
+          .to(teamList, { y: itemInitialY - itemStep * (i + 1), duration: 1, ease: 'none' }, i)
+          .to(nextItem, { color: '#ffffff', fontWeight: 700, duration: 1, ease: 'none' }, i)
+          .to(prevItem, { color: '#6b6b6b', fontWeight: 500, duration: 1, ease: 'none' }, i)
+      })
+
+      const scrollToIndex = (index) => {
+        const st = tl.scrollTrigger
+        const y = st.start + (st.end - st.start) * (index / (teamItems.length - 1))
+        window.scrollTo({ top: y, behavior: 'smooth' })
+      }
+
+      const onItemClick = function () {
+        scrollToIndex(Number(this.dataset.index))
+      }
+      teamItems.forEach((item) => item.addEventListener('click', onItemClick))
+      teamSlides.forEach((slide) => slide.addEventListener('click', onItemClick))
+
+      return () => {
+        teamItems.forEach((item) => item.removeEventListener('click', onItemClick))
+        teamSlides.forEach((slide) => slide.removeEventListener('click', onItemClick))
+        gsap.set(teamStrip, { clearProps: 'transform' })
+        gsap.set(teamList, { clearProps: 'transform' })
+        gsap.set(teamItems, { clearProps: 'color,fontWeight' })
+        teamSlides.forEach((s, i) => s.classList.toggle('team__slide--active', i === 0))
+        teamItems.forEach((it, i) => it.classList.toggle('team__item--active', i === 0))
+        gridPinOffset = 0
+        gsap.set(gridLayers, { clearProps: 'transform' })
+      }
+    },
+  })
+}
+
+const process = document.querySelector('.process')
+const processCards = gsap.utils.toArray('.process__card')
+
+if (process && processCards.length > 1) {
+  const STEP = 320
+  const pinEnd = () => `+=${(processCards.length - 1) * STEP}`
+
+  ScrollTrigger.matchMedia({
+    '(min-width: 721px)': () => {
+      const gridLayers = gsap.utils.toArray('.grid-overlay__base, .grid-overlay__spotlight')
+      const pinDistance = (processCards.length - 1) * STEP
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: process,
+          start: 'top top',
+          end: pinEnd,
+          scrub: 0.35,
+          pin: '.process__pin',
+          onUpdate(self) {
+            // Ceil (not round) so a card becomes the active/sharp one the instant
+            // it starts sliding in, not halfway through its entrance — otherwise
+            // the still-blurred incoming card visibly "pops" to sharp + on-top
+            // partway through the motion instead of arriving that way.
+            const idx = Math.min(Math.ceil(self.progress * (processCards.length - 1)), processCards.length - 1)
+            processCards.forEach((c, i) => c.classList.toggle('process__card--active', i === idx))
+
+            const y = self.progress * pinDistance
+            gsap.set(gridLayers, { y })
+            gridPinOffset = y
+          },
+          // process is the last of the three grid-locking pins. Once it's
+          // scrolled past, there's no further pin to compensate for, so the
+          // grid must drop its accumulated offset here — otherwise it stays
+          // translated for the rest of the page (FAQ, final CTA, footer),
+          // both misaligning the tile pattern and inflating the document's
+          // scrollable height with dead space past the real last section.
+          onLeave() {
+            gridPinOffset = 0
+            gsap.set(gridLayers, { clearProps: 'transform' })
+          },
+        },
+      })
+
+      // Each incoming card is fully opaque the whole time (no fade). It starts
+      // parked outside the pinned viewport (clipped by .process__pin, which
+      // spans the full page width) via xPercent — a percentage of the card's
+      // own width — and further below its resting spot, then moves diagonally
+      // (x and y together) straight to its resting stacked position,
+      // overlapping the previous card the whole way in.
+      //
+      // xPercent must clear BOTH the card's own width AND however far its
+      // resting spot already sits from the pin's true right edge (the row's
+      // content-inset gap), or a sliver stays visible inside the clipped pin
+      // from the start. That gap can reach ~300px at wide viewports while the
+      // card is up to 720px wide, so 130% (only 936px) fell short — 220% give
+      // a comfortable margin at any card size/viewport combination.
+      gsap.set(processCards.slice(1), { xPercent: 220, y: 200 })
+      gsap.set(processCards, { filter: 'brightness(1)' })
+
+      // The card being covered darkens (never blurred — text must stay
+      // readable, not fade out) on the SAME timeline position/duration as the
+      // incoming card's entrance, so it dims gradually in sync with how much
+      // it's being covered, instead of snapping dark the instant the next
+      // card's class toggles.
+      processCards.slice(1).forEach((next, i) => {
+        const prev = processCards[i]
+        tl.to(next, { xPercent: 0, y: 0, duration: 1, ease: 'power2.out' }, i).to(
+          prev,
+          { filter: 'brightness(0.45)', duration: 1, ease: 'power2.out' },
+          i,
+        )
+      })
+
+      return () => {
+        gsap.set(processCards, { clearProps: 'transform,filter' })
+        processCards.forEach((c, i) => c.classList.toggle('process__card--active', i === 0))
+        gridPinOffset = 0
+        gsap.set(gridLayers, { clearProps: 'transform' })
       }
     },
   })
@@ -255,6 +442,28 @@ if (testimonialCarousel) {
   })
 }
 
+const faqItems = gsap.utils.toArray('[data-faq-item]')
+
+if (faqItems.length) {
+  faqItems.forEach((item) => {
+    const question = item.querySelector('.faq__question')
+
+    question.addEventListener('click', () => {
+      const isActive = item.classList.contains('faq__item--active')
+
+      faqItems.forEach((other) => {
+        other.classList.remove('faq__item--active')
+        other.querySelector('.faq__question').setAttribute('aria-expanded', 'false')
+      })
+
+      if (!isActive) {
+        item.classList.add('faq__item--active')
+        question.setAttribute('aria-expanded', 'true')
+      }
+    })
+  })
+}
+
 // Click-to-load YouTube facade: keeps the lightweight thumbnail on screen
 // until the visitor actually clicks play, instead of loading (or playing)
 // every testimonial's embed up front.
@@ -268,4 +477,35 @@ document.querySelectorAll('.clients__video[data-youtube-id]').forEach((video) =>
     iframe.allowFullscreen = true
     video.replaceChildren(iframe)
   })
+})
+
+// Generic modal system: any [data-modal-open="id"] opens #id, any
+// [data-modal-close] inside an open modal (backdrop or close button) closes
+// it, and Escape closes whichever modal is currently open.
+let openModal = null
+
+const closeModal = () => {
+  if (!openModal) return
+  openModal.setAttribute('aria-hidden', 'true')
+  document.body.style.overflow = ''
+  openModal = null
+}
+
+document.querySelectorAll('[data-modal-open]').forEach((trigger) => {
+  trigger.addEventListener('click', (event) => {
+    event.preventDefault()
+    const modal = document.getElementById(trigger.dataset.modalOpen)
+    if (!modal) return
+    modal.setAttribute('aria-hidden', 'false')
+    document.body.style.overflow = 'hidden'
+    openModal = modal
+  })
+})
+
+document.querySelectorAll('[data-modal-close]').forEach((closer) => {
+  closer.addEventListener('click', closeModal)
+})
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') closeModal()
 })
