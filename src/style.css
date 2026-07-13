@@ -638,17 +638,23 @@ html::-webkit-scrollbar-thumb {
   text-transform: uppercase;
   font-size: clamp(1.8rem, 4.4vw, 4rem);
   line-height: 1.2;
-  background: linear-gradient(180deg, #ffffff 0%, #a7a7a7 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
+/* The gradient-text treatment lives here, not on .section3__heading, because
+   the heading's own direct children are these .section3__line spans -- it
+   has no text nodes of its own. background-clip/background-image aren't
+   inherited (unlike color), so setting them on the parent left every line's
+   actual text invisible: transparent color with no gradient fill to
+   compensate. */
 .section3__line {
   display: flex;
   align-items: center;
   gap: 0.28em;
   flex-wrap: wrap;
+  background: linear-gradient(180deg, #ffffff 0%, #a7a7a7 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 .section3__icon {
