@@ -80,7 +80,11 @@ function bindSingleReveals(root, motionReduced, handled) {
   ].join(',')
 
   root.querySelectorAll(selector).forEach((el) => {
-    if (handled.has(el)) return
+    // A stagger container may also carry data-animate to name its children's
+    // preset (e.g. data-stagger + data-animate="scale-in") — that attribute
+    // describes the group, not the container itself, so the container must
+    // never also be treated as its own single-reveal target here.
+    if (handled.has(el) || el.hasAttribute('data-stagger')) return
 
     const presetName = presetNameFor(el)
     const preset = PRESET_LOOKUP[presetName]

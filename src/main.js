@@ -7,7 +7,19 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Swiper from 'swiper'
 import { Autoplay, Pagination } from 'swiper/modules'
 import './motion/config.js'
+import { prefersReducedMotion } from './motion/config.js'
 import { initMotion } from './motion/scan.js'
+
+// The nav is position:fixed, so it never moves through the document flow —
+// wiring it into the generic scroll-linked scanner (like every other
+// section) made it reverse to hidden any time the user scrolled back near
+// the top, which is exactly the "navbar disappears" failure the animation
+// spec explicitly rules out. A fixed nav gets a single play-once entrance
+// on load instead, with no ScrollTrigger involved at all.
+const nav = document.querySelector('.nav')
+if (nav && !prefersReducedMotion()) {
+  gsap.fromTo(nav, { opacity: 0, y: -24 }, { opacity: 1, y: 0, duration: 0.6, ease: 'power2.out' })
+}
 
 // The Host Grotesk webfont can finish loading/swapping in after ScrollTrigger
 // has already measured pin start/end positions from the fallback font's
