@@ -546,7 +546,7 @@ html::-webkit-scrollbar-thumb {
 
 .section2__line--gap {
   display: flex;
-  justify-content: space-between;
+  gap: 0.3em;
 }
 
 .section2__gradient {
@@ -1821,12 +1821,24 @@ html::-webkit-scrollbar-thumb {
   line-height: 1.5;
 }
 
+/* One continuous top-to-bottom gradient across both paragraphs: each
+   applies its own local 0%-100% slice, but the end color of -dim matches
+   the start color of -bright, so the seam between them reads as a single
+   unbroken fade rather than two flat, hard-cut colors. */
 .about__text-dim {
-  color: var(--fg-dim);
+  background-image: linear-gradient(180deg, rgba(249, 249, 249, 0.4) 0%, rgba(249, 249, 249, 0.75) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 .about__text-bright {
-  color: #ffffff;
+  background-image: linear-gradient(180deg, rgba(249, 249, 249, 0.75) 0%, #ffffff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 }
 
 /* ---------- Process ---------- */
@@ -1988,6 +2000,12 @@ html::-webkit-scrollbar-thumb {
    wrapper (== finalcta's bottom) and tall enough to bleed up over FAQ. */
 .faq-cta-shell {
   position: relative;
+  /* Lets the corner logo art (left bracket + right 3D arrow) bleed UP over the
+     FAQ section while still clipping any horizontal overflow so the arrow's
+     bottom-right anchor can sit past the viewport edge without adding a
+     horizontal scrollbar. overflow-x:clip + overflow-y:visible is a valid
+     combination (neither axis is scroll/auto), so vertical bleed is kept. */
+  overflow-x: clip;
 }
 
 .faq {
@@ -2165,21 +2183,33 @@ html::-webkit-scrollbar-thumb {
   text-align: center;
 }
 
-.finalcta__bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
+/* Lives in .faq-cta-shell, NOT inside .finalcta. .finalcta and .faq both sit
+   at z-index:2, so the whole .finalcta box (including any background layer
+   nested inside it) always paints above shell-level siblings like the logo
+   art below — nesting the wordmark inside .finalcta made it impossible to
+   keep it behind .finalcta__logo-left/right while still under the heading
+   text, since a parent's stacking position can't be split from its own
+   children's. Living at the shell level with z-index:0, it now stacks by DOM
+   order among the z-index:0 siblings — declared FIRST, so both logo images
+   (also z-index:0, declared after) paint on top of it, while .faq/.finalcta
+   (z-index:2) still paint above all three.
+   bottom is -16vh, NOT 0: .grid-overlay (the page's outermost content wrapper)
+   reserves a 16vh padding-bottom past the end of .faq-cta-shell for section6's
+   spline bleed room, so the shell's own bottom edge (bottom:0) sits 16vh above
+   the page's actual end — pulling the wordmark down by that same 16vh lands
+   its bottom flush with the true end of the page instead of leaving a gap of
+   bare black space below it. This doesn't create new dead space: it exactly
+   fills space .grid-overlay already reserves, so document height is unchanged. */
 .finalcta__wordmark {
   position: absolute;
   left: 0;
-  bottom: 0;
+  right: 0;
+  bottom: -16vh;
+  z-index: 0;
   width: 100%;
   height: auto;
   opacity: 0.95;
+  pointer-events: none;
 }
 
 .finalcta__logo-left {
@@ -2194,11 +2224,20 @@ html::-webkit-scrollbar-thumb {
 }
 
 .finalcta__logo-right {
+  /* Lives in .faq-cta-shell (a sibling of .faq and .finalcta), NOT inside
+     .finalcta — .finalcta is overflow:hidden to contain the wordmark, which
+     would crop this arrow at the CTA's top edge. Anchored to the shell's
+     bottom-right, its height reaches up past the CTA into the FAQ so it reads
+     as one continuous piece of art bridging the two sections. z-index:0 keeps
+     it behind the (transparent) FAQ/CTA so it shows through them but stays
+     under the CTA heading/button. */
   position: absolute;
   right: -2vw;
-  bottom: -2vw;
+  bottom: 0;
+  z-index: 0;
   width: clamp(480px, 46vw, 760px);
   height: auto;
+  pointer-events: none;
 }
 
 .finalcta__content {
@@ -2206,7 +2245,10 @@ html::-webkit-scrollbar-thumb {
   z-index: 2;
   max-width: 760px;
   margin: 0 auto;
-  padding: 0 24px 100px;
+  /* Large bottom padding grows the CTA into a tall stage below the button so
+     the full wordmark reads clearly in the gap before the footer, instead of
+     the section ending right under the button and cropping the logo art. */
+  padding: 0 24px clamp(320px, 40vh, 560px);
 }
 
 .finalcta__eyebrow {
@@ -2455,5 +2497,80 @@ html::-webkit-scrollbar-thumb {
 
   .section5__label-line {
     margin-left: 0;
+  }
+}
+
+/* ---------- Text FX (motion) ---------- */
+/* Kept last in the cascade on purpose: these are data-attribute driven
+   enhancements layered on top of existing component classes (e.g.
+   .about__text-dim), and several selectors below tie with those classes
+   on specificity -- being last guarantees they win regardless. */
+
+.word {
+  display: inline-block;
+}
+
+/* words-scrub: hero H1 word-by-word reveal handled entirely in JS (scan.js),
+   .word just needs to be a positionable inline box. */
+
+/* line-wipe: reuses each heading's existing manual line spans as wipe
+   targets; JS (scan.js) inserts the sliding <i class="text-fx-bar">. */
+[data-text-fx='line-wipe'] > * {
+  width: fit-content;
+}
+
+/* line-wipe-auto: same wipe, but for plain flowing text with no manual line
+   markup -- JS (scan.js) uses GSAP SplitText to find the real rendered
+   lines and wraps each in .line-wipe-auto-line before animating it. */
+.line-wipe-auto-line {
+  width: fit-content;
+}
+
+/* .finalcta__heading is text-align:center; shrinking its lines to
+   fit-content leaves them box-left-aligned unless re-centered explicitly.
+   .section6__heading is left-aligned already, so it's left alone. */
+.finalcta__heading[data-text-fx='line-wipe'] > * {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.text-fx-bar {
+  z-index: 2;
+  background-color: var(--accent);
+  pointer-events: none;
+}
+
+/* fill-loop: outlined "ghost" text with a solid color fill sweeping across
+   on loop. Single text layer (real DOM text only) painted via
+   background-clip so there is no second copy of the text to drift out of
+   alignment -- an attr()-duplicated ::before overlay was tried first and
+   visibly double-printed on wide-tracked labels, so that approach was
+   dropped in favor of this one. */
+[data-text-fx='fill-loop'] {
+  background-image: linear-gradient(90deg, #ffffff 0%, #ffffff 50%, transparent 50%, transparent 100%);
+  background-size: 220% 100%;
+  background-position: 100% 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 0.3px rgba(255, 255, 255, 0.55);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-text-fx='fill-loop'] {
+    animation: text-fill-sweep 6s linear infinite;
+  }
+}
+
+@keyframes text-fill-sweep {
+  0%,
+  10%,
+  100% {
+    background-position: 100% 0;
+  }
+  70%,
+  90% {
+    background-position: 0% 0;
   }
 }
