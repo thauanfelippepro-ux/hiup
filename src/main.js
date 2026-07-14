@@ -65,12 +65,33 @@ if ('ResizeObserver' in window) {
 const gridOverlay = document.querySelector('.grid-overlay')
 const spotlight = document.querySelector('.grid-overlay__spotlight')
 
-// While section4 is pinned, its grid layers are pushed down via a
-// compensating translateY (see section4 setup below) so the background
-// appears locked to the fixed icon/cards instead of scrolling normally.
-// The spotlight mask math below needs to subtract that same offset, or the
-// mouse-follow circle renders that many pixels away from the real cursor.
-let gridPinOffset = 0
+// While a section is pinned, the grid tile is shifted DOWN by the scroll
+// distance the pin consumes, so the background appears locked to the fixed
+// icon/cards instead of scrolling normally. This shift is applied via
+// background-position-y (not transform: translateY) on purpose: the grid
+// layers span the full page height, so translating them down would push their
+// box past the document end and inflate the scrollable height with dead space
+// past the footer. Shifting the repeating tile's background-position moves the
+// pattern identically without touching the element box — no dead space, and
+// because the tile repeats, the offset can be held indefinitely with no need
+// to ever reset it (which would itself cause a visible jump).
+//
+// section4, team and process all lock the grid this way, one after another
+// down the page. Each pin adds its scroll distance to the shift, so by the
+// time a later pin engages the grid is ALREADY offset by everything the
+// earlier pins pushed. Each section must therefore start its compensation from
+// that accumulated base instead of from 0 — otherwise the grid snaps back to 0
+// the instant the next pin engages, a visible jump at every section boundary
+// (~one full previous-section's worth of pixels).
+const GRID_STEP = 320
+const gridPinDistanceFor = (selector) => {
+  const count = document.querySelectorAll(selector).length
+  return count > 1 ? (count - 1) * GRID_STEP : 0
+}
+const SECTION4_GRID_DIST = gridPinDistanceFor('.section4__card')
+const TEAM_GRID_DIST = gridPinDistanceFor('.team__item[data-index]')
+const TEAM_GRID_BASE = SECTION4_GRID_DIST
+const PROCESS_GRID_BASE = SECTION4_GRID_DIST + TEAM_GRID_DIST
 
 if (gridOverlay && spotlight) {
   const pos = { x: 0, y: 0 }
@@ -84,7 +105,7 @@ if (gridOverlay && spotlight) {
   gridOverlay.addEventListener('pointermove', (event) => {
     const rect = gridOverlay.getBoundingClientRect()
     setX(event.clientX - rect.left)
-    setY(event.clientY - rect.top - gridPinOffset)
+    setY(event.clientY - rect.top)
     gsap.to(spotlight, { opacity: 1, duration: 0.4, ease: 'power1.out' })
   })
 
@@ -139,8 +160,9 @@ if (section4 && section4Cards.length > 1) {
           pin: '.section4__pin',
           onUpdate(self) {
             const y = self.progress * pinDistance
-            gsap.set(gridLayers, { y })
-            gridPinOffset = y
+            gridLayers.forEach((layer) => {
+              layer.style.backgroundPositionY = `${y}px`
+            })
           },
         },
       })
@@ -160,9 +182,10 @@ if (section4 && section4Cards.length > 1) {
       })
 
       return () => {
-        gridPinOffset = 0
         gsap.set(section4Cards.slice(1), { clearProps: 'transform,opacity' })
-        gsap.set(gridLayers, { clearProps: 'transform' })
+        gridLayers.forEach((layer) => {
+          layer.style.backgroundPositionY = ''
+        })
         gsap.set(
           cardParts.map((p) => p.glow),
           { clearProps: 'opacity' },
@@ -227,9 +250,10 @@ if (
             teamSlides.forEach((s, i) => s.classList.toggle('team__slide--active', i === idx))
             teamItems.forEach((it, i) => it.classList.toggle('team__item--active', i === idx))
 
-            const y = self.progress * pinDistance
-            gsap.set(gridLayers, { y })
-            gridPinOffset = y
+            const y = TEAM_GRID_BASE + self.progress * pinDistance
+            gridLayers.forEach((layer) => {
+              layer.style.backgroundPositionY = `${y}px`
+            })
           },
         },
       })
@@ -263,8 +287,9 @@ if (
         gsap.set(teamItems, { clearProps: 'color,fontWeight' })
         teamSlides.forEach((s, i) => s.classList.toggle('team__slide--active', i === 0))
         teamItems.forEach((it, i) => it.classList.toggle('team__item--active', i === 0))
-        gridPinOffset = 0
-        gsap.set(gridLayers, { clearProps: 'transform' })
+        gridLayers.forEach((layer) => {
+          layer.style.backgroundPositionY = ''
+        })
       }
     },
   })
@@ -297,20 +322,19 @@ if (process && processCards.length > 1) {
             const idx = Math.min(Math.ceil(self.progress * (processCards.length - 1)), processCards.length - 1)
             processCards.forEach((c, i) => c.classList.toggle('process__card--active', i === idx))
 
-            const y = self.progress * pinDistance
-            gsap.set(gridLayers, { y })
-            gridPinOffset = y
+            const y = PROCESS_GRID_BASE + self.progress * pinDistance
+            gridLayers.forEach((layer) => {
+              layer.style.backgroundPositionY = `${y}px`
+            })
           },
-          // process is the last of the three grid-locking pins. Once it's
-          // scrolled past, there's no further pin to compensate for, so the
-          // grid must drop its accumulated offset here — otherwise it stays
-          // translated for the rest of the page (FAQ, final CTA, footer),
-          // both misaligning the tile pattern and inflating the document's
-          // scrollable height with dead space past the real last section.
-          onLeave() {
-            gridPinOffset = 0
-            gsap.set(gridLayers, { clearProps: 'transform' })
-          },
+          // process is the last of the three grid-locking pins. Once scrolled
+          // past, the grid KEEPS its final accumulated offset for the rest of
+          // the page (FAQ, final CTA, footer) rather than resetting to 0 —
+          // resetting would snap the grid up by a full section's worth of
+          // pixels the instant you leave (the same boundary jump this offset
+          // accumulation exists to prevent). The transform is on the child
+          // grid layers only, so it never affects document height/scroll, and
+          // the tile pattern repeats, so a constant phase offset is invisible.
         },
       })
 
@@ -347,8 +371,9 @@ if (process && processCards.length > 1) {
       return () => {
         gsap.set(processCards, { clearProps: 'transform,filter' })
         processCards.forEach((c, i) => c.classList.toggle('process__card--active', i === 0))
-        gridPinOffset = 0
-        gsap.set(gridLayers, { clearProps: 'transform' })
+        gridLayers.forEach((layer) => {
+          layer.style.backgroundPositionY = ''
+        })
       }
     },
   })

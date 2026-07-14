@@ -143,6 +143,22 @@ export function buttonReveal(target, overrides) {
   )
 }
 
+export function sharpIn(target, overrides) {
+  return withOverrides(
+    {
+      from: { opacity: 0, letterSpacing: '-0.5em', filter: 'blur(12px)' },
+      to: {
+        opacity: 1,
+        letterSpacing: '0em',
+        filter: 'blur(0px)',
+        duration: 1.6,
+        ease: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+      },
+    },
+    overrides,
+  )
+}
+
 export function sectionTransition(target, overrides) {
   return withOverrides(
     {

@@ -1,5 +1,7 @@
 import gsap from 'gsap'
-import { DISTANCES } from './config.js'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { SplitText } from 'gsap/SplitText'
+import { DISTANCES, DURATIONS, EASES, STAGGER } from './config.js'
 import * as presets from './presets.js'
 
 const PRESET_LOOKUP = {
@@ -17,6 +19,7 @@ const PRESET_LOOKUP = {
   rotate: presets.iconRotate,
   'button-reveal': presets.buttonReveal,
   'section-transition': presets.sectionTransition,
+  'sharp-in': presets.sharpIn,
 }
 
 function presetNameFor(el) {
@@ -111,6 +114,151 @@ function bindSingleReveals(root, motionReduced, handled) {
   })
 }
 
+// Recursively wraps every run of text inside `root` in `<span class="word">`,
+// treating existing element children (icons, inline spans) as single atomic
+// "words" rather than descending into unrelated markup like <img>. Returns
+// the flat list of word elements in document order for staggered reveals.
+function splitIntoWords(root) {
+  const words = []
+
+  function walk(el) {
+    Array.from(el.childNodes).forEach((node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const parts = node.textContent.split(/(\s+)/).filter((part) => part.length)
+        const frag = document.createDocumentFragment()
+        parts.forEach((part) => {
+          if (/^\s+$/.test(part)) {
+            frag.appendChild(document.createTextNode(part))
+            return
+          }
+          const span = document.createElement('span')
+          span.className = 'word'
+          span.textContent = part
+          frag.appendChild(span)
+          words.push(span)
+        })
+        node.replaceWith(frag)
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        if (node.tagName === 'IMG') {
+          node.classList.add('word')
+          words.push(node)
+        } else {
+          walk(node)
+        }
+      }
+    })
+  }
+
+  walk(root)
+  return words
+}
+
+function bindWordsScrub(root, motionReduced) {
+  root.querySelectorAll('[data-text-fx="words-scrub"]').forEach((el) => {
+    const words = splitIntoWords(el)
+    if (!words.length) return
+
+    if (motionReduced) {
+      gsap.set(words, { clearProps: 'all' })
+      return
+    }
+
+    gsap.set(words, { opacity: 0, y: DISTANCES.sm })
+    gsap.to(words, {
+      opacity: 1,
+      y: 0,
+      stagger: STAGGER.tight,
+      ease: 'none',
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 90%',
+        end: 'bottom 40%',
+        scrub: 0.5,
+      },
+    })
+  })
+}
+
+function bindGradientScrub(root, motionReduced) {
+  root.querySelectorAll('[data-text-fx="gradient-scrub"]').forEach((el) => {
+    if (motionReduced) {
+      gsap.set(el, { clearProps: 'all' })
+      return
+    }
+
+    gsap.set(el, { '--gs-pos': '0%' })
+    gsap.to(el, {
+      '--gs-pos': '100%',
+      ease: 'none',
+      scrollTrigger: {
+        trigger: el,
+        start: 'top 85%',
+        end: 'bottom 55%',
+        scrub: 0.4,
+      },
+    })
+  })
+}
+
+function bindLineWipe(root, motionReduced) {
+  root.querySelectorAll('[data-text-fx="line-wipe"]').forEach((container) => {
+    const lines = Array.from(container.children).filter((child) => child.tagName !== 'BR')
+    if (!lines.length) return
+
+    if (motionReduced) {
+      gsap.set(lines, { clearProps: 'all' })
+      return
+    }
+
+    const bars = lines.map((line) => {
+      gsap.set(line, { position: 'relative', overflow: 'hidden', clipPath: 'inset(0% 100% 0% 0%)' })
+      const bar = document.createElement('i')
+      bar.className = 'text-fx-bar'
+      line.appendChild(bar)
+      gsap.set(bar, { position: 'absolute', inset: 0 })
+      return bar
+    })
+
+    const tl = gsap.timeline({ paused: true })
+    tl.to(lines, { clipPath: 'inset(0% 0% 0% 0%)', ease: EASES.emphasized, duration: DURATIONS.slow, stagger: STAGGER.base }, 0)
+    tl.to(bars, { left: '100%', ease: EASES.emphasized, duration: DURATIONS.slow, stagger: STAGGER.base }, DURATIONS.slow * 0.5)
+
+    ScrollTrigger.create({ ...makeScrollTrigger(container), animation: tl })
+  })
+}
+
+// Same reveal as bindLineWipe (clip-path wipe + sliding accent bar), but for
+// plain flowing text (paragraphs, non-manually-line-broken headings) where
+// there's no pre-existing per-line markup to key off of. Uses GSAP's
+// SplitText to detect real rendered lines instead.
+function bindLineWipeAuto(root, motionReduced) {
+  root.querySelectorAll('[data-text-fx="line-wipe-auto"]').forEach((el) => {
+    const split = new SplitText(el, { type: 'lines', linesClass: 'line-wipe-auto-line' })
+    const lines = split.lines
+    if (!lines.length) return
+
+    if (motionReduced) {
+      gsap.set(lines, { clearProps: 'all' })
+      return
+    }
+
+    const bars = lines.map((line) => {
+      gsap.set(line, { position: 'relative', overflow: 'hidden', clipPath: 'inset(0% 100% 0% 0%)' })
+      const bar = document.createElement('i')
+      bar.className = 'text-fx-bar'
+      line.appendChild(bar)
+      gsap.set(bar, { position: 'absolute', inset: 0 })
+      return bar
+    })
+
+    const tl = gsap.timeline({ paused: true })
+    tl.to(lines, { clipPath: 'inset(0% 0% 0% 0%)', ease: EASES.emphasized, duration: DURATIONS.slow, stagger: STAGGER.base }, 0)
+    tl.to(bars, { left: '100%', ease: EASES.emphasized, duration: DURATIONS.slow, stagger: STAGGER.base }, DURATIONS.slow * 0.5)
+
+    ScrollTrigger.create({ ...makeScrollTrigger(el), animation: tl })
+  })
+}
+
 function bindParallax(root, motionReduced) {
   if (motionReduced) return // parallax is fully disabled under reduced motion
 
@@ -156,6 +304,10 @@ export function initMotion(root = document.body) {
         bindStaggerContainers(root, motionReduced, handled)
         bindSingleReveals(root, motionReduced, handled)
         bindParallax(root, motionReduced)
+        bindWordsScrub(root, motionReduced)
+        bindGradientScrub(root, motionReduced)
+        bindLineWipe(root, motionReduced)
+        bindLineWipeAuto(root, motionReduced)
       },
     )
   }, root)
