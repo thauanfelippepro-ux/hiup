@@ -136,8 +136,13 @@ if (section4 && section4Cards.length > 1) {
   const STEP = 320
   const pinEnd = () => `+=${(section4Cards.length - 1) * STEP}`
 
+  // Unlike team and process below, this pin runs at EVERY width. The stacked
+  // card reveal is the whole point of the section, and dropping to a plain
+  // list on mobile lost it -- the cards just sat there. The layout being
+  // pinned is the same at both ends; only the row's direction changes (see
+  // the .section4__row rules in the mobile media query).
   ScrollTrigger.matchMedia({
-    '(min-width: 721px)': () => {
+    all: () => {
       gsap.set(section4Cards.slice(1), { x: 70, y: 110, opacity: 0 })
 
       const gridLayers = gsap.utils.toArray('.grid-overlay__base, .grid-overlay__spotlight')

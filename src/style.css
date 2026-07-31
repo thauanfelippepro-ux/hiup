@@ -2621,9 +2621,25 @@ html::-webkit-scrollbar-thumb {
     font-size: clamp(1.25rem, 5.6vw, 1.5rem);
   }
 
+  /* The three .section2__line spans are manual line breaks measured against
+     the desktop width. None of them fits on one line here (the first alone
+     would need a ~15px font), so each wraps on its own and strands its last
+     word -- "MARCAS", then "MAIS" -- alone on a line. Balancing distributes
+     the words evenly across however many lines each span actually needs. */
+  .section2__line {
+    text-wrap: balance;
+  }
+
+  /* This line is a flex row of two spans; wrapping it breaks BETWEEN them,
+     which is what put "MAIS" on a line by itself. As a block the two spans
+     become inline and reflow as one continuous sentence, with the margin
+     standing in for the flex gap that no longer applies. */
   .section2__line--gap {
-    flex-wrap: wrap;
-    justify-content: center;
+    display: block;
+  }
+
+  .section2__line--gap > :first-child {
+    margin-right: 0.3em;
   }
 
   /* The <br> is placed for the desktop measure; at mobile widths it forces a
@@ -2662,22 +2678,30 @@ html::-webkit-scrollbar-thumb {
 
   .section3__subheading {
     font-size: clamp(20px, 5.6vw, 28px);
+    text-wrap: balance;
   }
 
   /* ---- Section 4 ---- */
 
+  /* This section deliberately keeps its DESKTOP behaviour here: the pin holds
+     the section still while scrolling slides each card up over the previous
+     one. So the card stack stays absolutely positioned exactly as on desktop
+     -- only the ROW changes, from a two-column (label | stack) layout into a
+     stacked one, since there is no room for the label beside the cards. */
   .section4__pin {
-    min-height: 0;
+    /* svh rather than vh: vh resolves to the viewport at its TALLEST (browser
+       chrome retracted), so a 100vh pin is taller than what is actually
+       visible while the address bar is showing, pushing the top of the card
+       stack up under it. */
+    min-height: 100svh;
+    --row-top: clamp(88px, 14vh, 150px);
   }
 
   .section4__row {
-    position: static;
-    display: flex;
     flex-direction: column;
     align-items: flex-start;
+    gap: 24px;
     padding-left: var(--pad-x);
-    padding-top: 60px;
-    padding-bottom: 40px;
   }
 
   .section4__label {
@@ -2689,38 +2713,15 @@ html::-webkit-scrollbar-thumb {
     left: calc(-1 * var(--pad-x));
   }
 
-  /* Negative right margin preserves the desktop card treatment (rounded left
-     corners, no right border, running off the right edge) now that the row
-     itself is padded. */
+  /* Negative right margin preserves the desktop card treatment: rounded left
+     corners, no right border, running off the right edge of the screen. */
   .section4__stack {
-    position: static;
     flex: none;
-    max-width: none;
     width: auto;
+    max-width: none;
     margin-left: 0;
     margin-right: calc(-1 * var(--pad-x));
     align-self: stretch;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  /* relative rather than static so the card stays the containing block for
-     its own inset:0 .section4__card-glow. Static re-anchors the glow to
-     .section4__pin, where it only still looks right because the card's
-     overflow:hidden happens to crop it back to the card's box. */
-  .section4__card {
-    position: relative;
-    width: 100%;
-    height: auto;
-  }
-
-  .section4__card--active {
-    position: relative;
-  }
-
-  .section4__card-text {
-    -webkit-line-clamp: unset;
   }
 
   .section4__icon {
@@ -2755,6 +2756,22 @@ html::-webkit-scrollbar-thumb {
   .clients__label,
   .faq__label {
     white-space: normal;
+  }
+
+  /* Two different problems, two different tools. The 3-word spans ("Enquanto
+     muitas produtoras") strand their last word no matter how they are wrapped,
+     so those need the type to actually fit one line -- hence the vw term,
+     which keeps them fitting all the way down to 320px. The 4-word span is
+     genuinely two lines, and there `pretty` picks the break that avoids a
+     short last line. `balance` would do the same but is unavailable here: the
+     wipe animation sets overflow:hidden inline on every line, and clipped
+     blocks are excluded from balancing. `pretty` still applies. */
+  .section5__heading {
+    font-size: clamp(0.95rem, 4.5vw, 1.35rem);
+  }
+
+  .section5__line {
+    text-wrap: pretty;
   }
 
   .section5__slide {
@@ -3113,8 +3130,20 @@ html::-webkit-scrollbar-thumb {
     padding-bottom: clamp(180px, 34vh, 300px);
   }
 
+  /* "YOUR BRAND [icon] ALREADY" overshoots one line by only a few percent at
+     320px, which is enough to strand "ALREADY". Tightening the icon's gutters
+     and shaving the type slightly is enough to pull it back -- no need for the
+     larger reduction section5 needs, since this line is only marginally over. */
   .finalcta__heading {
-    font-size: clamp(1.35rem, 6.4vw, 1.7rem);
+    font-size: clamp(1.25rem, 6.1vw, 1.7rem);
+  }
+
+  .finalcta__line {
+    text-wrap: pretty;
+  }
+
+  .finalcta__heading-tag {
+    margin-inline: 3px;
   }
 
   .finalcta__cta {
@@ -3223,6 +3252,20 @@ html::-webkit-scrollbar-thumb {
 @media (prefers-reduced-motion: no-preference) {
   [data-text-fx='fill-loop'] {
     animation: text-fill-sweep 6s linear infinite;
+  }
+}
+
+/* Mobile override for the line-wipe sizing above. It has to live down here
+   for the same reason the Text FX block does: it ties on specificity with
+   [data-text-fx='line-wipe'] > *, so only source order decides the winner.
+   width:fit-content shrinks each line box back to the width of its own
+   longest line, which defeats text-wrap:balance -- the balancer needs a fixed
+   available width to redistribute words across. Letting the box fill the
+   measure restores it; the only visible consequence is that the accent wipe
+   bar spans the line box rather than hugging the text. */
+@media (max-width: 720px) {
+  [data-text-fx='line-wipe'] > * {
+    width: auto;
   }
 }
 
