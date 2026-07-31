@@ -2617,17 +2617,14 @@ html::-webkit-scrollbar-thumb {
     gap: 22px;
   }
 
+  /* Sized so each of the three .section2__line spans fits on ONE line, which
+     is how the heading is built -- they are manual breaks, one per line --
+     bringing it down from six rendered lines to three. The longest span needs
+     about 4.74vw to fit; 4.6vw keeps a margin at every width. The cap lands on
+     ~20.8px, which is what the desktop rule resolves to just above the
+     breakpoint, so the size does not jump when crossing it. */
   .section2__heading {
-    font-size: clamp(1.25rem, 5.6vw, 1.5rem);
-  }
-
-  /* The three .section2__line spans are manual line breaks measured against
-     the desktop width. None of them fits on one line here (the first alone
-     would need a ~15px font), so each wraps on its own and strands its last
-     word -- "MARCAS", then "MAIS" -- alone on a line. Balancing distributes
-     the words evenly across however many lines each span actually needs. */
-  .section2__line {
-    text-wrap: balance;
+    font-size: clamp(0.9rem, 4.6vw, 1.3rem);
   }
 
   /* This line is a flex row of two spans; wrapping it breaks BETWEEN them,
@@ -2722,6 +2719,28 @@ html::-webkit-scrollbar-thumb {
     margin-left: 0;
     margin-right: calc(-1 * var(--pad-x));
     align-self: stretch;
+  }
+
+  /* The card deliberately runs off the right edge (that is the desktop
+     treatment: rounded left corners, no right border). On desktop the stack
+     is only 70% of the row, so there is plenty of card left on screen. Here it
+     spans the full width, so the whole right padding falls outside the
+     viewport and the text ends up ~3px from the screen edge. Add the bleed
+     back as padding so the text keeps its intended gutter. */
+  .section4__card-body {
+    padding-right: calc(clamp(22px, 2.4vw, 30px) + var(--pad-x));
+  }
+
+  /* Both of these resolve to their clamp MINIMUM at every mobile width (the
+     vw terms only overtake it past ~1000px), so the card kept its full desktop
+     size on a 320px screen and swallowed the viewport. Re-scaling them against
+     vw keeps the same proportion the desktop has, just smaller. */
+  .section4__card {
+    height: clamp(118px, 34vw, 150px);
+  }
+
+  .section4__card-text {
+    font-size: clamp(14px, 4.1vw, 18px);
   }
 
   .section4__icon {
