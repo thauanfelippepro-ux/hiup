@@ -2413,77 +2413,92 @@ html::-webkit-scrollbar-thumb {
   color: var(--fg-dim);
 }
 
-@media (max-width: 720px) {
-  .nav {
-    padding: 8px 8px 8px 20px;
+/* ---------- Responsive: tablet (721px - 900px) ---------- */
+/* The pinned sections (section4 / team / process) keep their pinned desktop
+   layout in this band -- their GSAP triggers activate at >=721px, so
+   unpinning them here in CSS alone would leave the JS animating a layout that
+   no longer exists. This band therefore only shrinks the FIXED widths that
+   make those three-column rows wider than a tablet viewport, and clips the
+   deliberately-oversized decorative art. Nothing above 900px is touched. */
+@media (min-width: 721px) and (max-width: 900px) {
+  .section4__pin,
+  .team__pin,
+  .process__pin {
+    --content-inset: 24px;
   }
 
-  .nav__cta span {
-    font-size: 10px;
+  /* Every section aligns to the same 24px rule here. The desktop layout gets
+     its alignment from centred max-width containers, which only agree with
+     each other while they are actually AT their max width; at tablet widths
+     each one falls back to its own vw percentage (94vw vs 92vw vs a pin
+     inset) and the section left edges fan out across ~30px. */
+  .section5__head,
+  .works__head,
+  .clients__head,
+  .clients__carousel,
+  .faq__row {
+    max-width: 100%;
+    padding-inline: 24px;
   }
 
-  .hero__eyebrow--side {
-    display: none;
-  }
-
-  .hero__caption {
-    max-width: 160px;
-  }
-
-  .section2__tag {
-    display: none;
-  }
-
-  .section3__content {
-    grid-template-columns: 1fr;
-  }
-
-  .section4__pin {
-    min-height: 0;
-  }
-
-  .section4__row {
-    position: static;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding-left: 0;
-    padding-top: 60px;
-    padding-bottom: 40px;
-  }
-
-  .section4__label {
-    max-width: none;
-    white-space: normal;
-  }
-
-  .section4__stack {
-    position: static;
-    flex: none;
-    max-width: none;
+  .about__row {
     width: 100%;
-    margin-left: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+    padding-inline: 24px;
   }
 
-  .section4__card {
-    position: static;
-    width: 100%;
-    height: auto;
+  .section5__meta {
+    --inset: 24px;
   }
 
-  .section4__card--active {
-    position: static;
+  /* Same collision as mobile: .faq__label is absolutely placed at the row's
+     top-left and only clears the answer list while that list is a 640px
+     column floating in a much wider row. */
+  .faq__label {
+    position: relative;
+    top: auto;
+    left: auto;
+    display: inline-block;
+    margin-bottom: 44px;
   }
 
-  .section4__card-text {
-    -webkit-line-clamp: unset;
+  .team__row {
+    column-gap: clamp(16px, 2.4vw, 28px);
   }
 
-  .section4__icon {
-    width: min(70vw, 320px);
+  .section4__label,
+  .team__label,
+  .process__label {
+    font-size: clamp(18px, 2.4vw, 26px);
+  }
+
+  .team__list-viewport {
+    width: clamp(150px, 22vw, 200px);
+    height: clamp(110px, 15vw, 140px);
+  }
+
+  .team__item {
+    font-size: clamp(17px, 2.2vw, 24px);
+  }
+
+  .team__stage {
+    width: clamp(200px, 30vw, 260px);
+    height: clamp(300px, 46vw, 400px);
+  }
+
+  .team__slide {
+    height: clamp(200px, 30vw, 260px);
+  }
+
+  .process__stack {
+    max-width: min(60vw, 520px);
+  }
+
+  .process__card-title {
+    font-size: clamp(22px, 3.4vw, 30px);
+  }
+
+  .process__card-desc {
+    font-size: clamp(14px, 1.9vw, 16px);
   }
 
   .section5__head {
@@ -2495,8 +2510,656 @@ html::-webkit-scrollbar-thumb {
     text-align: left;
   }
 
-  .section5__label-line {
+  .section6__content {
+    max-width: min(62vw, 440px);
+  }
+
+  .finalcta__logo-right {
+    width: clamp(340px, 44vw, 520px);
+  }
+
+  .clients__icon-row-inner {
+    --icon-col: clamp(88px, 11.5vw, 130px);
+  }
+}
+
+/* spline-viewer is deliberately oversized (130% of section6, offset up/left)
+   so the ring reads as one continuous shape rather than a cropped circle. At
+   desktop widths it bleeds into horizontal space the page can spare; below
+   that it is simply wider than the viewport. Clipping to section6's own box
+   keeps the identical oversized framing without the overflow. */
+@media (max-width: 900px) {
+  .section6__bg {
+    overflow: hidden;
+  }
+
+  /* .section2__tag enters with the fade-left preset, which parks it 48px to
+     the right of its resting position until its scroll trigger fires. On
+     desktop that start position sits in spare margin; here it is 48px of page
+     overflow for as long as the section is below the fold. */
+  .section2 {
+    overflow-x: clip;
+  }
+
+  /* Two separate bleeds, one per side of the breakpoint: below 721px the card
+     stack is pulled past the right edge on purpose (see .section4__stack);
+     at and above it, the pin's timeline parks the four inactive cards at
+     x:70 until it fires. html's overflow-x:hidden already hides the resulting
+     scrollbar, but hidden still permits programmatic and touch panning, so the
+     page could still be dragged sideways. clip (not hidden) so the axis never
+     becomes a scroll container -- the same reason .faq-cta-shell uses it. */
+  .section4 {
+    overflow-x: clip;
+  }
+
+  /* 100vw is the viewport INCLUDING the classic scrollbar gutter, so every
+     full-bleed block built on it is systematically wider than the content box.
+     Both of these already sit in a full-width, zero-padding parent, so 100% is
+     the same edge-to-edge bleed without the extra gutter width. */
+  .clients__icons,
+  .section5__carousel {
+    width: 100%;
     margin-left: 0;
+  }
+}
+
+/* ---------- Responsive: mobile (<= 720px) ---------- */
+@media (max-width: 720px) {
+  :root {
+    /* One side-padding token for the whole page. The desktop layout gets its
+       alignment from centered max-width containers; once those stop
+       constraining, each section falls back to its own hardcoded padding and
+       the left edge lands anywhere between 0 and 36px. */
+    --pad-x: clamp(16px, 4.5vw, 24px);
+  }
+
+  .nav {
+    top: max(clamp(14px, 2vw, 28px), env(safe-area-inset-top));
+    padding: 8px 8px 8px 20px;
+  }
+
+  .nav__cta {
+    min-height: 44px;
+    padding: 12px 18px;
+  }
+
+  .nav__cta span {
+    font-size: 11px;
+  }
+
+  /* ---- Hero ---- */
+
+  .hero__headline {
+    /* Upper bound lands at 41.6px, within a pixel of what the desktop rule
+       resolves to at 721px, so the breakpoint is not a visible size jump. */
+    font-size: clamp(1.95rem, 9vw, 2.6rem);
+  }
+
+  .hero__eyebrow--top {
+    font-size: 13px;
+    letter-spacing: 0.18em;
+  }
+
+  .hero__eyebrow--side {
+    display: none;
+  }
+
+  .hero__caption {
+    left: var(--pad-x);
+    max-width: 160px;
+    font-size: 14px;
+  }
+
+  /* ---- Section 2 ---- */
+
+  .section2__content {
+    padding-inline: var(--pad-x);
+    gap: 22px;
+  }
+
+  .section2__heading {
+    font-size: clamp(1.25rem, 5.6vw, 1.5rem);
+  }
+
+  .section2__line--gap {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* The <br> is placed for the desktop measure; at mobile widths it forces a
+     break several words before the line actually runs out. */
+  .section2__subtext br {
+    display: none;
+  }
+
+  .section2__cta {
+    min-height: 48px;
+    padding: 14px 32px;
+  }
+
+  .section2__tag {
+    display: none;
+  }
+
+  /* ---- Section 3 ---- */
+
+  .section3__content {
+    grid-template-columns: 1fr;
+    padding-inline: var(--pad-x);
+  }
+
+  /* The desktop pull-up is calibrated against an arch image that is far
+     taller than it renders at mobile widths, so the clamp bottoms out at
+     -300px against a ~200px-tall image and drags the heading clean off the
+     top of it. A vw-relative pull keeps the same ~55% overlap at every width. */
+  .section3__arch {
+    margin-bottom: -28vw;
+  }
+
+  .section3__heading {
+    font-size: clamp(1.6rem, 7.4vw, 2rem);
+  }
+
+  .section3__subheading {
+    font-size: clamp(20px, 5.6vw, 28px);
+  }
+
+  /* ---- Section 4 ---- */
+
+  .section4__pin {
+    min-height: 0;
+  }
+
+  .section4__row {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: var(--pad-x);
+    padding-top: 60px;
+    padding-bottom: 40px;
+  }
+
+  .section4__label {
+    max-width: none;
+    white-space: normal;
+  }
+
+  .section4__label-line {
+    left: calc(-1 * var(--pad-x));
+  }
+
+  /* Negative right margin preserves the desktop card treatment (rounded left
+     corners, no right border, running off the right edge) now that the row
+     itself is padded. */
+  .section4__stack {
+    position: static;
+    flex: none;
+    max-width: none;
+    width: auto;
+    margin-left: 0;
+    margin-right: calc(-1 * var(--pad-x));
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* relative rather than static so the card stays the containing block for
+     its own inset:0 .section4__card-glow. Static re-anchors the glow to
+     .section4__pin, where it only still looks right because the card's
+     overflow:hidden happens to crop it back to the card's box. */
+  .section4__card {
+    position: relative;
+    width: 100%;
+    height: auto;
+  }
+
+  .section4__card--active {
+    position: relative;
+  }
+
+  .section4__card-text {
+    -webkit-line-clamp: unset;
+  }
+
+  .section4__icon {
+    width: min(70vw, 320px);
+  }
+
+  /* ---- Section 5 ---- */
+
+  /* .section5__meta enters with the fade-left preset, which parks it 48px to
+     the RIGHT of its resting position until it scrolls into view. On desktop
+     that start position is absorbed by the empty margin beside the centered
+     container; at mobile widths the element already spans the full measure, so
+     those 48px are 48px of page overflow for as long as the trigger is unfired. */
+  .section5 {
+    overflow-x: clip;
+  }
+
+  .section5__head {
+    flex-direction: column;
+    max-width: 100%;
+    padding-inline: var(--pad-x);
+  }
+
+  .section5__meta {
+    --inset: var(--pad-x);
+    max-width: none;
+    text-align: left;
+  }
+
+  .section5__label,
+  .works__label,
+  .clients__label,
+  .faq__label {
+    white-space: normal;
+  }
+
+  .section5__slide {
+    width: min(78vw, 300px);
+    height: min(84vw, 320px);
+  }
+
+  .section5__caption {
+    padding-inline: var(--pad-x);
+  }
+
+  /* Bullets are the only way to move this carousel without a horizontal
+     swipe, so they need a real touch target rather than an 8px dot. */
+  .section5__dots .swiper-pagination-bullet,
+  .clients__dots .swiper-pagination-bullet {
+    height: 10px;
+    padding: 12px 0;
+    background-clip: content-box;
+  }
+
+  /* ---- Works ---- */
+
+  .works__head,
+  .clients__head {
+    max-width: 100%;
+    padding-inline: var(--pad-x);
+  }
+
+  .works__label-line,
+  .clients__label-line,
+  .faq__label-line {
+    left: calc(-1 * var(--pad-x));
+  }
+
+  .works__tile {
+    width: clamp(220px, 62vw, 280px);
+    height: clamp(124px, 35vw, 160px);
+  }
+
+  /* 11px secondary captions read fine at desktop viewing distance but are the
+     smallest real text on the page; a point up keeps them comfortable on a
+     handheld without touching the primary type scale. */
+  .works__tile-cat,
+  .clients__testimonial-role {
+    font-size: 12px;
+  }
+
+  /* ---- Section 6 ---- */
+
+  .section6 {
+    padding-block: clamp(64px, 14vw, 96px);
+  }
+
+  .section6__content {
+    max-width: none;
+    padding-inline: var(--pad-x);
+  }
+
+  .section6__cta {
+    min-height: 48px;
+    padding: 14px 32px;
+  }
+
+  /* ---- Clients ---- */
+
+  /* The seven/eight column grid exists to centre the logos as a pyramid on a
+     wide row; below that width it is simply eight 120px columns in a 320px
+     viewport. The spacer cells carry no content, so the filled ones can
+     reflow on their own into a grid that fits. */
+  .clients__icon-cell:not(.clients__icon-cell--filled) {
+    display: none;
+  }
+
+  .clients__icon-row-inner,
+  .clients__icon-row-inner--8 {
+    --icon-col: auto;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .clients__icon-cell {
+    min-height: 72px;
+    padding: 0 clamp(10px, 3vw, 16px);
+  }
+
+  .clients__icon {
+    height: 22px;
+    -webkit-mask-position: center;
+    mask-position: center;
+  }
+
+  .clients__carousel {
+    max-width: 100%;
+    padding-inline: var(--pad-x);
+  }
+
+  .clients__carousel .swiper-slide {
+    width: min(74vw, 300px);
+  }
+
+  /* ---- Team ---- */
+
+  /* The whole team section is driven by a GSAP pin that only exists at
+     >=721px: the role list and the photo strip are both absolutely positioned
+     inside short, masked viewports, and the pin is what scrolls them. Without
+     it, six of the seven roles and six of the seven photos are simply
+     unreachable. Unpinned, the list becomes a plain wrapped list and the strip
+     a native scroll-snap carousel, so every entry is reachable by touch. */
+  .team {
+    padding-top: 40px;
+  }
+
+  .team__pin {
+    min-height: 0;
+  }
+
+  .team__row {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 28px;
+    padding-inline: var(--pad-x);
+    padding-block: 60px 40px;
+  }
+
+  .team__label {
+    max-width: none;
+    white-space: normal;
+  }
+
+  .team__label-line {
+    left: calc(-1 * var(--pad-x));
+  }
+
+  .team__list-viewport {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  .team__list {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+  }
+
+  .team__item {
+    height: auto;
+    margin-bottom: 0;
+    font-size: clamp(16px, 4.4vw, 20px);
+    /* Nothing toggles the active state without the pin, so the muted grey the
+       desktop uses for "not the current one" would just be six low-contrast
+       labels with no way to change which one is lit. */
+    color: var(--fg);
+  }
+
+  .team__item,
+  .team__slide {
+    cursor: default;
+  }
+
+  .team__stage {
+    width: 100%;
+    max-width: none;
+    height: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
+    mask-image: none;
+    -webkit-mask-image: none;
+    scroll-snap-type: x mandatory;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    margin-right: calc(-1 * var(--pad-x));
+    padding-right: var(--pad-x);
+  }
+
+  .team__stage::-webkit-scrollbar {
+    display: none;
+  }
+
+  .team__strip {
+    position: static;
+    width: auto;
+    display: flex;
+    gap: 14px;
+  }
+
+  .team__slide {
+    flex: 0 0 min(72vw, 300px);
+    height: auto;
+    aspect-ratio: 1 / 1;
+    margin-bottom: 0;
+    opacity: 1;
+    transform: none;
+    scroll-snap-align: start;
+  }
+
+  /* ---- About ---- */
+
+  /* .about__label is white-space:nowrap and .about__text has a 640px min
+     measure, so side by side they are wider than the row long before mobile
+     widths -- .about's overflow:hidden was clipping the paragraph text. */
+  .about {
+    padding-top: clamp(120px, 34vw, 200px);
+  }
+
+  .about__bg {
+    width: min(150%, 620px);
+  }
+
+  .about__row {
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    padding-inline: var(--pad-x);
+  }
+
+  .about__label {
+    padding-top: 0;
+    font-size: clamp(17px, 4.6vw, 22px);
+    white-space: normal;
+  }
+
+  .about__text {
+    max-width: none;
+  }
+
+  .about__text p {
+    font-size: clamp(18px, 4.8vw, 26px);
+    margin-bottom: 12px;
+  }
+
+  /* ---- Process ---- */
+
+  /* Same story as team: the five cards are absolutely stacked on top of each
+     other and the >=721px pin is what slides them apart, so unpinned only the
+     last card is visible. .process__card-body is absolutely bottom-anchored
+     inside the card, and at mobile card heights its desktop type scale makes
+     it taller than the card image it sits on -- it was overflowing out the
+     top of its own card. */
+  .process__pin {
+    min-height: 0;
+  }
+
+  .process__row {
+    position: static;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 32px;
+    padding-inline: var(--pad-x);
+    padding-block: 60px 0;
+  }
+
+  .process__label {
+    max-width: none;
+    white-space: normal;
+  }
+
+  .process__label-line {
+    left: calc(-1 * var(--pad-x));
+  }
+
+  .process__stack {
+    width: 100%;
+    max-width: none;
+    height: auto;
+    margin-left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* relative, not static: .process__card-top and .process__card-body are both
+     absolutely positioned against the card. Dropping the card out of the
+     positioned chain re-anchors them to .process__pin, which parks every
+     card's title and description at the bottom of the whole section -- where
+     the card's own overflow:hidden then clips them away entirely. */
+  .process__card {
+    position: relative;
+  }
+
+  .process__card-top {
+    top: clamp(12px, 3.4vw, 18px);
+    left: clamp(12px, 3.4vw, 18px);
+    gap: 8px;
+  }
+
+  .process__card-num {
+    width: 34px;
+    height: 34px;
+    font-size: 12px;
+  }
+
+  .process__card-tag {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .process__card-body {
+    left: clamp(14px, 4vw, 20px);
+    right: clamp(14px, 4vw, 20px);
+    bottom: clamp(14px, 4vw, 20px);
+  }
+
+  .process__card-title {
+    margin-bottom: 4px;
+    font-size: clamp(20px, 5.4vw, 26px);
+  }
+
+  .process__card-desc {
+    font-size: clamp(13px, 3.6vw, 15px);
+    line-height: 1.35;
+  }
+
+  /* ---- FAQ ---- */
+
+  /* .faq__label is absolutely positioned at the top-left of .faq__row and
+     clears the answer list only because that list is a 640px column centred in
+     a much wider row. Once the list fills the row, the label sits directly on
+     top of the first question. */
+  .faq__row {
+    max-width: 100%;
+    padding-inline: var(--pad-x);
+  }
+
+  .faq__label {
+    position: relative;
+    top: auto;
+    left: auto;
+    display: inline-block;
+    max-width: none;
+    margin-bottom: 44px;
+  }
+
+  .faq__question {
+    min-height: 56px;
+    padding: 16px var(--pad-x);
+  }
+
+  .faq__question-text {
+    font-size: 15px;
+  }
+
+  .faq__answer {
+    margin-inline: 10px;
+    padding: 14px 16px;
+  }
+
+  /* ---- Final CTA ---- */
+
+  .finalcta__content {
+    padding-inline: var(--pad-x);
+    padding-bottom: clamp(180px, 34vh, 300px);
+  }
+
+  .finalcta__heading {
+    font-size: clamp(1.35rem, 6.4vw, 1.7rem);
+  }
+
+  .finalcta__cta {
+    min-height: 48px;
+    padding: 14px 28px;
+  }
+
+  /* At mobile widths these decorative crops are wider than the screen, so they
+     stop reading as corner art and start competing with the CTA copy. */
+  .finalcta__logo-left {
+    width: clamp(120px, 34vw, 200px);
+  }
+
+  .finalcta__logo-right {
+    width: clamp(240px, 72vw, 400px);
+  }
+
+  .finalcta__footer {
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    padding: 20px var(--pad-x);
+    padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  }
+
+  /* ---- Modal ---- */
+
+  .modal {
+    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  }
+
+  .modal__panel {
+    width: 100%;
+    max-height: 84dvh;
+    padding: 24px 20px;
+  }
+
+  .modal__close {
+    width: 40px;
+    height: 40px;
+    top: 12px;
+    right: 12px;
+  }
+
+  .modal__title {
+    padding-right: 44px;
   }
 }
 
