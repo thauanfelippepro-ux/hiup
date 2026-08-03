@@ -606,6 +606,14 @@ html::-webkit-scrollbar-thumb {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  /* Explicit, because the caption is absolutely positioned and so shrink-wraps
+     its content: whatever the widest line measures becomes the column, leaving
+     space-between on the justified line with nothing to distribute. That was
+     invisible while "Films built to stop" was the widest line, and broke the
+     moment "from" moved onto the second span and made it the widest at 205px.
+     230px keeps roughly 25px of gap between the two halves. */
+  width: 230px;
+  max-width: 100%;
   font-size: 16px;
   font-weight: 400;
   line-height: 1.4;
@@ -2825,7 +2833,15 @@ html::-webkit-scrollbar-thumb {
 
   .hero__caption {
     left: var(--pad-x);
-    max-width: 160px;
+    /* Explicit width, not max-width. The caption is absolutely positioned, so
+       it shrink-wraps its content and a max-width only ever caps it. That was
+       fine while "Films built to stop" (146px) was the widest line and the
+       justified line had 18px to distribute. Moving "from" onto the second span
+       made that line 179px -- now the widest -- so space-between had nothing
+       left and the spans ran together as "peoplefrom scrolling.".
+       Fixing the width at 200px gives it ~20px of gap to distribute again. */
+    width: 200px;
+    max-width: 100%;
     font-size: 14px;
   }
 
