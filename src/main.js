@@ -162,6 +162,15 @@ const clearGridStyles = (layers) => {
 // phone that trade is not close.
 const gridLockDisabled = window.matchMedia('(hover: none) and (pointer: coarse)').matches
 
+// Touch gets a far tighter scrub. 0.35 asks the pinned timeline to ease toward
+// the scroll position over roughly a third of a second. On a phone, where the
+// scroll itself is driven on the compositor and the pin is corrected on the
+// main thread, that easing window is exactly where the two are allowed to
+// disagree -- and the disagreement is what reads as the shake. 0.08 keeps a
+// trace of smoothing without giving the gap room to open. Desktop, where the
+// two never diverge, keeps the softer value.
+const PIN_SCRUB = gridLockDisabled ? 0.08 : 0.35
+
 const lockGridToViewport = (layers) => {
   if (gridLockDisabled) return
   layers.forEach((layer) => {
@@ -344,7 +353,7 @@ if (section4 && section4Cards.length > 1) {
           trigger: section4,
           start: 'top top',
           end: pinEnd,
-          scrub: 0.35,
+          scrub: PIN_SCRUB,
           pin: '.section4__pin',
           onEnter: () => lockGridToViewport(gridLayers),
           onEnterBack: () => lockGridToViewport(gridLayers),
@@ -436,7 +445,7 @@ if (
           trigger: team,
           start: 'top top',
           end: `+=${pinDistance}`,
-          scrub: 0.35,
+          scrub: PIN_SCRUB,
           pin: '.team__pin',
           onUpdate(self) {
             // Guarded on the index rather than running every frame: this used to
@@ -564,7 +573,7 @@ if (process && processCards.length > 1) {
           trigger: process,
           start: 'top top',
           end: pinEnd,
-          scrub: 0.35,
+          scrub: PIN_SCRUB,
           pin: '.process__pin',
           onUpdate(self) {
             // Ceil (not round) so a card becomes the active/sharp one the instant

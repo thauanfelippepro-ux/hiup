@@ -263,6 +263,23 @@ function bindLineWipe(root, motionReduced) {
 // there's no pre-existing per-line markup to key off of. Uses GSAP's
 // SplitText to detect real rendered lines instead.
 function bindLineWipeAuto(root, motionReduced) {
+  // On touch this reveal is skipped entirely and the text is simply left
+  // visible.
+  //
+  // It works by splitting the copy into lines with SplitText and hiding each
+  // behind a clip-path until a ScrollTrigger opens it. Two fixes were attempted
+  // for the about section reading as blank on an iPhone -- removing the reverse
+  // action, then completing anything already scrolled past -- and neither
+  // helped, which means the failure is somewhere I cannot reproduce or measure
+  // from here: SplitText's line detection and iOS Safari's layout during a
+  // pinned scroll are both plausible and neither is testable without the
+  // device.
+  //
+  // Guessing a third time is not worth the stake. Body copy that never appears
+  // is a broken page; the same copy without a wipe is just less animated.
+  // Desktop, where the effect is verified working, keeps it.
+  if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) return
+
   root.querySelectorAll('[data-text-fx="line-wipe-auto"]').forEach((el) => {
     // aria:'none' stops SplitText mirroring the text into an aria-label on the
     // element it splits. That label is prohibited on the roles these elements
