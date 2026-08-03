@@ -12,22 +12,18 @@ gsap.registerPlugin(ScrollTrigger, SplitText)
 // change still refreshes. No effect on desktop, which has no retracting chrome.
 ScrollTrigger.config({ ignoreMobileResize: true })
 
-// Touch browsers scroll on the compositor thread and do not wait for
-// JavaScript. Pinning is the opposite: it needs the main thread to reposition
-// the pinned element every frame. The two drift apart under a finger flick,
-// which is what makes a pinned section judder on a phone while staying smooth
-// on desktop -- three sections here are pinned, and all three showed it.
+// normalizeScroll is deliberately NOT enabled.
 //
-// normalizeScroll hands touch scrolling to ScrollTrigger, so the scroll
-// position and everything driven by it resolve in the same pass and cannot
-// disagree. It also absorbs the address-bar show/hide that otherwise resizes
-// the viewport mid-scroll.
+// It was tried, to close the gap between compositor-thread touch scrolling and
+// main-thread pinning. On iOS Safari it made things worse: it replaces the
+// browser's own touch handling, which means it also replaces Safari's momentum
+// and its dynamic-toolbar behaviour, and the page felt stuck from the first
+// pinned section onward. It intercepts deeply enough that programmatic
+// scrolling stopped updating ScrollTrigger at all, which is a fair measure of
+// how much it takes over.
 //
-// Touch only: pointer-based scrolling has no such split, and taking over the
-// wheel would trade a real problem for a worse one.
-if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
-  ScrollTrigger.normalizeScroll(true)
-}
+// Native scroll is the better trade. A little judder is survivable; scrolling
+// that fights the finger is not.
 
 export const DURATIONS = {
   fast: 0.35,

@@ -148,7 +148,22 @@ const clearGridStyles = (layers) => {
   })
 }
 
+// Touch devices keep the grid scrolling normally through the pinned sections.
+//
+// The lock swaps a page-height layer to position:fixed at every pin boundary
+// and back again. On desktop that is free. On iOS Safari it is one of the
+// worst things you can do during a momentum scroll: fixed elements are not
+// repainted while the finger's inertia is still running, so the layer lags the
+// content and then snaps, and the whole page reads as stuck -- which is
+// precisely what happens from the first pinned section onward.
+//
+// What is lost is subtle: the background grid drifts past instead of holding
+// still behind the pinned cards. What is gained is a page that scrolls. On a
+// phone that trade is not close.
+const gridLockDisabled = window.matchMedia('(hover: none) and (pointer: coarse)').matches
+
 const lockGridToViewport = (layers) => {
+  if (gridLockDisabled) return
   layers.forEach((layer) => {
     const rect = layer.getBoundingClientRect()
     const current = parseFloat(layer.style.backgroundPositionY) || 0
@@ -184,6 +199,7 @@ const lockGridToViewport = (layers) => {
 // every pin was entered and left exactly on its boundary, and entering one
 // mid-scroll (or resizing while pinned) breaks that assumption silently.
 const releaseGrid = (layers) => {
+  if (gridLockDisabled) return
   layers.forEach((layer) => {
     const lockedPhase = parseFloat(layer.style.backgroundPositionY) || 0
 
