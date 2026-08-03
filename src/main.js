@@ -171,6 +171,17 @@ const gridLockDisabled = window.matchMedia('(hover: none) and (pointer: coarse)'
 // two never diverge, keeps the softer value.
 const PIN_SCRUB = gridLockDisabled ? 0.08 : 0.35
 
+// ScrollTrigger pins with position:fixed by default. On iOS that box is
+// repositioned by the main thread while the scroll itself runs on the
+// compositor, so the whole pinned block -- label, cards and the 3D mark
+// together -- lags and catches up. That is the shake, and it is why everything
+// inside the pin shakes as one rather than each element on its own.
+//
+// 'transform' pins by translating instead, which the compositor carries without
+// waiting for JavaScript. Touch only: on desktop fixed is already smooth, and
+// it is the mode the pin-spacer maths there was verified against.
+const PIN_TYPE = gridLockDisabled ? 'transform' : 'fixed'
+
 const lockGridToViewport = (layers) => {
   if (gridLockDisabled) return
   layers.forEach((layer) => {
@@ -354,6 +365,7 @@ if (section4 && section4Cards.length > 1) {
           start: 'top top',
           end: pinEnd,
           scrub: PIN_SCRUB,
+          pinType: PIN_TYPE,
           pin: '.section4__pin',
           onEnter: () => lockGridToViewport(gridLayers),
           onEnterBack: () => lockGridToViewport(gridLayers),
@@ -446,6 +458,7 @@ if (
           start: 'top top',
           end: `+=${pinDistance}`,
           scrub: PIN_SCRUB,
+          pinType: PIN_TYPE,
           pin: '.team__pin',
           onUpdate(self) {
             // Guarded on the index rather than running every frame: this used to
@@ -574,6 +587,7 @@ if (process && processCards.length > 1) {
           start: 'top top',
           end: pinEnd,
           scrub: PIN_SCRUB,
+          pinType: PIN_TYPE,
           pin: '.process__pin',
           onUpdate(self) {
             // Ceil (not round) so a card becomes the active/sharp one the instant

@@ -3238,7 +3238,10 @@ html::-webkit-scrollbar-thumb {
     min-height: 72svh;
     /* Centres the block inside the shortened pin: ~230px of content in ~608px
        of box leaves roughly 190px above it. */
-    --row-top: clamp(150px, 30vh, 270px);
+    /* The label sits at --row-top and the roles/photo are pushed down from it
+       by row-gap, so the two move independently: a smaller offset lifts the
+       title, a larger gap drops the content. */
+    --row-top: clamp(90px, 18vh, 160px);
   }
 
   .team {
@@ -3255,7 +3258,7 @@ html::-webkit-scrollbar-thumb {
       'list  stage';
     align-items: center;
     column-gap: 14px;
-    row-gap: 28px;
+    row-gap: 90px;
     padding-inline: var(--pad-x);
   }
 
