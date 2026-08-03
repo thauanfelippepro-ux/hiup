@@ -2836,7 +2836,11 @@ html::-webkit-scrollbar-thumb {
        visible while the address bar is showing, pushing the top of the card
        stack up under it. */
     min-height: 100svh;
-    --row-top: clamp(88px, 14vh, 150px);
+    /* The pin holds a full viewport, but the label and card stack only fill
+       the top ~280px of it, so anchoring them this high left most of the
+       screen empty below the deck. Dropping them toward the middle uses that
+       space instead of leaving it as a gap before the next section. */
+    --row-top: clamp(150px, 33vh, 300px);
   }
 
   .section4__row {
@@ -2888,8 +2892,12 @@ html::-webkit-scrollbar-thumb {
     font-size: clamp(14px, 4.1vw, 18px);
   }
 
+  /* The desktop icon runs to 68vw; holding it to 70vw here made it read as a
+     small badge behind the cards rather than the backdrop it is meant to be.
+     Letting it bleed past the viewport keeps the desktop proportion -- .section4
+     clips the horizontal axis, so the extra width costs no page overflow. */
   .section4__icon {
-    width: min(70vw, 320px);
+    width: min(125vw, 520px);
   }
 
   /* ---- Section 5 ---- */
@@ -2987,6 +2995,24 @@ html::-webkit-scrollbar-thumb {
 
   .section6 {
     padding-block: clamp(64px, 14vw, 96px);
+  }
+
+  /* At desktop widths the copy sits in the left third, clear of the ring. On a
+     phone it spans the full width and the ring's blades ran straight through
+     the headline -- bright highlights directly behind white text, which is the
+     one place this scene has no contrast to give.
+     Scaling the scene up and centring it on the copy puts the ring's dark
+     middle behind the text instead, and pushes the blades out to frame the
+     edges of the screen, so the 3D still reads as a ring rather than
+     disappearing. .section6__bg already clips at this width, so the extra size
+     costs no page overflow. */
+  .section6__bg spline-viewer,
+  .section6__vignette,
+  .section6__spotlight {
+    top: -100%;
+    left: -100%;
+    width: 300%;
+    height: 300%;
   }
 
   .section6__content {
@@ -3386,6 +3412,16 @@ html::-webkit-scrollbar-thumb {
    fit-content leaves them box-left-aligned unless re-centered explicitly.
    .section6__heading is left-aligned already, so it's left alone. */
 .finalcta__heading[data-text-fx='line-wipe'] > * {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Same correction, same reason: .section2__content centres its children, but
+   width:fit-content turns each line span into a shrink-wrapped block that then
+   sits against the left edge of the heading box rather than in the middle of
+   it. Only visible above 720px -- the mobile override below restores
+   width:auto, where the inherited text-align:center already handles it. */
+.section2__heading[data-text-fx='line-wipe'] > * {
   margin-left: auto;
   margin-right: auto;
 }
