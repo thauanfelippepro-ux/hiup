@@ -1841,6 +1841,14 @@ html::-webkit-scrollbar-thumb {
   white-space: nowrap;
 }
 
+/* Colour is transitioned rather than snapped, which is the fade the removed
+   GSAP tween used to provide. Weight is not transitioned: Host Grotesk ships as
+   discrete weights, so it steps regardless, and animating it costs a text
+   re-layout on every frame. */
+.team__item {
+  transition: color 0.3s ease;
+}
+
 .team__item--active {
   color: #ffffff;
   font-weight: 700;
@@ -2874,10 +2882,12 @@ html::-webkit-scrollbar-thumb {
   /* The label sits directly above the deck here rather than beside it, so the
      desktop's 24px gap left it crowded between the 3D mark behind it and the
      top card. */
+  /* --row-top now places the label where it should sit, so the deck is pushed
+     down from it with the gap rather than by moving the whole row. */
   .section4__row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 52px;
+    gap: 120px;
     padding-left: var(--pad-x);
   }
 
@@ -2927,8 +2937,11 @@ html::-webkit-scrollbar-thumb {
      small badge behind the cards rather than the backdrop it is meant to be.
      Letting it bleed past the viewport keeps the desktop proportion -- .section4
      clips the horizontal axis, so the extra width costs no page overflow. */
+  /* Centred on the pin like the desktop, but nudged down so it sits behind the
+     deck rather than behind the label above it. */
   .section4__icon {
     width: min(125vw, 520px);
+    top: 62%;
   }
 
   /* ---- Section 5 ---- */
@@ -3050,11 +3063,18 @@ html::-webkit-scrollbar-thumb {
      The framebuffer scales with the square of this number, and the scrim below
      now carries the contrast, so the ring does not need the extra size:
      110% lands near 3 megapixels, roughly one screen, instead of five. */
+  /* Spline bakes its "Built with Spline" mark into the canvas itself for this
+     scene, so the DOM badge being hidden (main.js injects a rule for that) does
+     not remove it -- only moving that corner out of the clipped area does.
+     Shifted rather than scaled up: the framebuffer grows with the square of the
+     size, and going large here is exactly what put 15.4 megapixels of WebGL on
+     a 3.0 megapixel screen and made the page crash. Offsetting costs nothing,
+     and .section6__bg already clips at this width. */
   .section6__bg spline-viewer,
   .section6__vignette,
   .section6__spotlight {
-    top: -5%;
-    left: -5%;
+    top: 6%;
+    left: 8%;
     width: 110%;
     height: 110%;
   }

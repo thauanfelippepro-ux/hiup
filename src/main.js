@@ -389,12 +389,14 @@ if (
   teamItems.length === teamSlides.length
 ) {
   const STEP = 320
+  let lastTeamIndex = -1
 
   // Runs at every width, like section4 and process. Below 721px this used to
   // fall back to a swipeable gallery with no active state, so the roles and the
   // photo no longer moved together -- which is the whole point of the section.
   ScrollTrigger.matchMedia({
     all: () => {
+      lastTeamIndex = -1
       const slide = teamSlides[0]
       const slideHeight = slide.offsetHeight
       const slideGap = parseFloat(getComputedStyle(slide).marginBottom) || 0
@@ -421,7 +423,12 @@ if (
           scrub: 0.35,
           pin: '.team__pin',
           onUpdate(self) {
+            // Guarded on the index rather than running every frame: this used to
+            // touch 14 elements on every scroll update to re-assert classes that
+            // had not changed, and each pass invalidated style for all of them.
             const idx = Math.round(self.progress * (teamItems.length - 1))
+            if (idx === lastTeamIndex) return
+            lastTeamIndex = idx
             teamSlides.forEach((s, i) => s.classList.toggle('team__slide--active', i === idx))
             teamItems.forEach((it, i) => it.classList.toggle('team__item--active', i === idx))
           },
@@ -435,10 +442,19 @@ if (
       teamItems.slice(1).forEach((nextItem, i) => {
         const prevItem = teamItems[i]
 
-        tl.to(teamStrip, { y: slideInitialY - slideStep * (i + 1), duration: 1, ease: 'none' }, i)
-          .to(teamList, { y: itemInitialY - itemStep * (i + 1), duration: 1, ease: 'none' }, i)
-          .to(nextItem, { color: '#ffffff', fontWeight: 700, duration: 1, ease: 'none' }, i)
-          .to(prevItem, { color: '#6b6b6b', fontWeight: 500, duration: 1, ease: 'none' }, i)
+        // Only the two transforms are tweened. The active item's colour and
+        // weight used to be tweened here too, which was both redundant and
+        // expensive: .team__item--active already declares exactly those values
+        // and onUpdate already toggles it, and animating font-weight re-lays
+        // out the text on every single frame. Host Grotesk ships as discrete
+        // weights, so the in-between values snapped to the nearest one anyway --
+        // the animation cost a full layout per frame to render a step change.
+        // CSS handles it now, with a transition for the fade the tween gave.
+        tl.to(teamStrip, { y: slideInitialY - slideStep * (i + 1), duration: 1, ease: 'none' }, i).to(
+          teamList,
+          { y: itemInitialY - itemStep * (i + 1), duration: 1, ease: 'none' },
+          i,
+        )
       })
 
       const scrollToIndex = (index) => {
@@ -495,6 +511,7 @@ const processCards = gsap.utils.toArray('.process__card')
 if (process && processCards.length > 1) {
   const STEP = 320
   const pinEnd = () => `+=${(processCards.length - 1) * STEP}`
+  let lastProcessIndex = -1
 
   // Runs at every width, for the same reason section4's does: the cards
   // sliding over one another IS the section. Below 721px this used to fall
@@ -504,6 +521,7 @@ if (process && processCards.length > 1) {
   // mobile media query).
   ScrollTrigger.matchMedia({
     all: () => {
+      lastProcessIndex = -1
       const gridLayers = gsap.utils.toArray('.grid-overlay__base, .grid-overlay__spotlight')
       const pinDistance = (processCards.length - 1) * STEP
 
@@ -520,6 +538,10 @@ if (process && processCards.length > 1) {
             // the still-blurred incoming card visibly "pops" to sharp + on-top
             // partway through the motion instead of arriving that way.
             const idx = Math.min(Math.ceil(self.progress * (processCards.length - 1)), processCards.length - 1)
+            // Same guard as team: re-asserting unchanged classes every frame
+            // invalidated style for all five cards for nothing.
+            if (idx === lastProcessIndex) return
+            lastProcessIndex = idx
             processCards.forEach((c, i) => c.classList.toggle('process__card--active', i === idx))
           },
           onEnter: () => lockGridToViewport(gridLayers),
