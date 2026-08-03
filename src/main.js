@@ -1,6 +1,5 @@
 import 'swiper/css'
 import 'swiper/css/pagination'
-import '@splinetool/viewer'
 import './style.css'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -22,6 +21,14 @@ import { initMotion } from './motion/scan.js'
 //    hero viewport (the side eyebrow, the caption) until the user scrolls
 //    down some amount, even though that content is already fully visible
 //    on load -- it should appear together with the headline, not later.
+// Every listener that lives for as long as the page does is registered against
+// this one signal, so all of them come off in a single abort() instead of each
+// needing its own remembered handler reference. Listeners with a narrower life
+// (the team pin's click handlers) stay with the matchMedia cleanup that already
+// owns them.
+const pageLifetime = new AbortController()
+const untilTeardown = { signal: pageLifetime.signal }
+
 const nav = document.querySelector('.nav')
 const heroEyebrowTop = document.querySelector('.hero__eyebrow--top')
 const heroLines = document.querySelectorAll('.hero__headline .hero__line')
@@ -48,18 +55,52 @@ if (document.fonts && document.fonts.ready) {
 }
 
 // section6's <spline-viewer> loads its 3D scene from a remote URL and keeps
-// resizing/shifting section6's layout well after the page's own load event
-// -- for an unpredictable amount of time, unlike fonts or the pin setup
-// above (which settle synchronously). A ResizeObserver on the whole page
-// catches that (and any future similar async content: late-loading images,
-// embeds, etc.) generically, instead of special-casing each component.
-if ('ResizeObserver' in window) {
-  let resizeRefreshTimer
-  const resizeObserver = new ResizeObserver(() => {
-    clearTimeout(resizeRefreshTimer)
-    resizeRefreshTimer = setTimeout(() => ScrollTrigger.refresh(), 200)
+// resizing/shifting section6's layout well after the page's own load event --
+// for an unpredictable amount of time, unlike fonts or the pin setup above
+// (which settle synchronously). Each of those shifts needs a ScrollTrigger
+// refresh or every pin below it is left measuring against a stale document.
+//
+// This used to observe document.body, which meant ANY size change anywhere on
+// the page triggered a full refresh -- and a refresh is not cheap: it re-measures
+// every trigger on the page and was the single largest forced-reflow contributor
+// in the load trace. Worse, a refresh can itself change body's height, which
+// re-entered the observer and scheduled another one.
+//
+// Two things make this narrower now. It watches only the element that actually
+// resizes asynchronously, and it gives up once that element has stopped moving,
+// so the observer is not left armed for the rest of the session. Everything the
+// wide version used to incidentally cover is handled properly elsewhere:
+// late-loading images no longer change layout at all (they all carry explicit
+// width/height as of the image pass), fonts are covered by document.fonts.ready
+// above, and window resizes are ScrollTrigger's own job.
+function watchAsyncResize(target) {
+  if (!('ResizeObserver' in window) || !target) return () => {}
+
+  let refreshTimer
+  let settleTimer
+  let disposed = false
+
+  const dispose = () => {
+    if (disposed) return
+    disposed = true
+    clearTimeout(refreshTimer)
+    clearTimeout(settleTimer)
+    observer.disconnect()
+  }
+
+  const observer = new ResizeObserver(() => {
+    clearTimeout(refreshTimer)
+    refreshTimer = setTimeout(() => ScrollTrigger.refresh(), 200)
+
+    // Stop watching once the scene has held the same size for a few seconds.
+    // Spline settles well inside that window; anything still resizing after it
+    // is an animation loop, not a layout change worth re-measuring for.
+    clearTimeout(settleTimer)
+    settleTimer = setTimeout(dispose, 4000)
   })
-  resizeObserver.observe(document.body)
+
+  observer.observe(target)
+  return dispose
 }
 
 const gridOverlay = document.querySelector('.grid-overlay')
@@ -93,6 +134,17 @@ const TEAM_GRID_DIST = gridPinDistanceFor('.team__item[data-index]')
 const TEAM_GRID_BASE = SECTION4_GRID_DIST
 const PROCESS_GRID_BASE = SECTION4_GRID_DIST + TEAM_GRID_DIST
 
+// The spotlight layer spans the whole grid overlay -- measured live, that is
+// 1910 x 15592px, or ~30 megapixels -- and carries both a filter
+// (brightness/saturate) and mix-blend-mode: screen. A layer that size with
+// those two properties is expensive to composite whether or not any of it is
+// actually visible, and its mask means at most a 520px circle around the cursor
+// ever is. Worse, on touch there is no pointer to follow, so the layer was being
+// composited for an entire session having never once been seen.
+//
+// Toggling display while it is faded out costs nothing visually (opacity is
+// already 0 at that point) and takes the layer out of the compositor entirely
+// for every visitor who is not actively hovering the grid.
 if (gridOverlay && spotlight) {
   const pos = { x: 0, y: 0 }
   const applyVars = () => {
@@ -102,16 +154,47 @@ if (gridOverlay && spotlight) {
   const setX = gsap.quickTo(pos, 'x', { duration: 0.5, ease: 'power3', onUpdate: applyVars })
   const setY = gsap.quickTo(pos, 'y', { duration: 0.5, ease: 'power3', onUpdate: applyVars })
 
+  spotlight.classList.add('grid-overlay__spotlight--idle')
+  let spotlightVisible = false
+
+  // getBoundingClientRect() was being called on every single pointermove, which
+  // forces a synchronous layout each time the pointer moves a pixel. The box
+  // only actually moves when the page scrolls or resizes, so it is cached and
+  // re-read lazily after one of those invalidates it.
+  let overlayRect = null
+  const invalidateRect = () => {
+    overlayRect = null
+  }
+  window.addEventListener('scroll', invalidateRect, { passive: true, ...untilTeardown })
+  window.addEventListener('resize', invalidateRect, untilTeardown)
+
   gridOverlay.addEventListener('pointermove', (event) => {
-    const rect = gridOverlay.getBoundingClientRect()
-    setX(event.clientX - rect.left)
-    setY(event.clientY - rect.top)
+    if (!overlayRect) overlayRect = gridOverlay.getBoundingClientRect()
+    setX(event.clientX - overlayRect.left)
+    setY(event.clientY - overlayRect.top)
+
+    // Previously this fired a brand new opacity tween on every pointermove --
+    // dozens of overlapping tweens per second, all animating to the same value.
+    // The fade only needs to run on the transition into view.
+    if (spotlightVisible) return
+    spotlightVisible = true
+    spotlight.classList.remove('grid-overlay__spotlight--idle')
     gsap.to(spotlight, { opacity: 1, duration: 0.4, ease: 'power1.out' })
-  })
+  }, untilTeardown)
 
   gridOverlay.addEventListener('pointerleave', () => {
-    gsap.to(spotlight, { opacity: 0, duration: 0.6, ease: 'power1.out' })
-  })
+    if (!spotlightVisible) return
+    spotlightVisible = false
+    gsap.to(spotlight, {
+      opacity: 0,
+      duration: 0.6,
+      ease: 'power1.out',
+      onComplete: () => {
+        // Guard against the pointer having come back mid-fade.
+        if (!spotlightVisible) spotlight.classList.add('grid-overlay__spotlight--idle')
+      },
+    })
+  }, untilTeardown)
 }
 
 const section4 = document.querySelector('.section4')
@@ -281,12 +364,34 @@ if (
       const onItemClick = function () {
         scrollToIndex(Number(this.dataset.index))
       }
-      teamItems.forEach((item) => item.addEventListener('click', onItemClick))
-      teamSlides.forEach((slide) => slide.addEventListener('click', onItemClick))
+
+      // These are <li> and <div> carrying a click handler -- operable with a
+      // mouse and completely unreachable with a keyboard. They are made focusable
+      // and given button semantics here, inside the same matchMedia branch that
+      // registers the click handler, so the affordance exists exactly where the
+      // behaviour does: below 721px there is no click handler, and advertising a
+      // button that does nothing would be worse than not advertising one.
+      const onItemKeydown = function (event) {
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        event.preventDefault() // Space would otherwise scroll the page
+        scrollToIndex(Number(this.dataset.index))
+      }
+
+      const interactive = [...teamItems, ...teamSlides]
+      interactive.forEach((element) => {
+        element.setAttribute('role', 'button')
+        element.setAttribute('tabindex', '0')
+        element.addEventListener('click', onItemClick)
+        element.addEventListener('keydown', onItemKeydown)
+      })
 
       return () => {
-        teamItems.forEach((item) => item.removeEventListener('click', onItemClick))
-        teamSlides.forEach((slide) => slide.removeEventListener('click', onItemClick))
+        interactive.forEach((element) => {
+          element.removeAttribute('role')
+          element.removeAttribute('tabindex')
+          element.removeEventListener('click', onItemClick)
+          element.removeEventListener('keydown', onItemKeydown)
+        })
         gsap.set(teamStrip, { clearProps: 'transform' })
         gsap.set(teamList, { clearProps: 'transform' })
         gsap.set(teamItems, { clearProps: 'color,fontWeight' })
@@ -431,7 +536,8 @@ if (carousel) {
   const peek = document.createElement('div')
   peek.className = 'section5__peek'
   peek.setAttribute('aria-hidden', 'true')
-  peek.innerHTML = '<img src="/assets/realtime-card.png" alt="" />'
+  peek.innerHTML =
+    '<img src="/assets/realtime-card.webp" alt="" width="563" height="493" decoding="async" loading="lazy" />'
   wrapper.insertAdjacentElement('beforebegin', peek)
 
   const positionPeek = () => {
@@ -476,26 +582,86 @@ if (carousel) {
   updateCaption(swiper.realIndex)
 }
 
+// @splinetool/viewer is 2.18 MB of JavaScript on its own -- roughly 88% of what
+// used to be the entry bundle, parsed and executed before anything on the page
+// could paint, all to drive a decorative (aria-hidden) 3D background five
+// screens below the fold. Importing it on demand takes it off the critical path
+// entirely, and visitors who bounce before section6 never download it at all.
+//
+// <spline-viewer> is inert until the custom element definition lands, so the
+// only thing that decides whether this looks identical to the old eager import
+// is WHEN the download starts. A 200% rootMargin begins it two full viewport
+// heights before section6 scrolls into view -- far enough ahead that the scene
+// has upgraded by the time the section is actually on screen, while still
+// skipping the work for anyone who never gets there.
 const splineViewer = document.querySelector('spline-viewer')
 
 if (splineViewer) {
-  const hideBadge = (root) => {
-    const badge = root.querySelector('#logo, a[href*="spline.design"], [class*="logo"]')
-    if (badge) {
-      badge.style.setProperty('display', 'none', 'important')
-      return true
+  // The viewer injects its badge as <a id="logo"> into its own shadow root once
+  // the remote scene finishes loading, and it carries an inline style of its
+  // own. Setting `badge.style.display = 'none'` from here therefore only held
+  // until the viewer wrote that inline style again -- which is why the badge
+  // was showing on the live page despite the old polling loop. Two things fix
+  // it for good:
+  //  - a <style> injected INTO the shadow root, because an author rule marked
+  //    !important outranks a normal inline declaration, so a later inline
+  //    write by the viewer can no longer win;
+  //  - installing that rule as soon as the shadow root exists, rather than
+  //    waiting for the badge element, so it is already in force whenever the
+  //    badge eventually arrives (no race, no fixed time budget to expire).
+  const BADGE_HIDE_CSS = '#logo, a[href*="spline.design"] { display: none !important; }'
+
+  const installBadgeRule = (root) => {
+    if (root.querySelector('style[data-hiup-badge]')) return
+    const style = document.createElement('style')
+    style.setAttribute('data-hiup-badge', '')
+    style.textContent = BADGE_HIDE_CSS
+    root.appendChild(style)
+  }
+
+  // Attaching a shadow root fires no event and is not a light-DOM mutation, so
+  // there is nothing to observe -- waiting for the root has to be a poll. It is
+  // a short one: the upgrade lands within a few frames of the chunk evaluating,
+  // and it stops the moment the rule is installed.
+  const startBadgeWatch = () => {
+    if (splineViewer.shadowRoot) {
+      installBadgeRule(splineViewer.shadowRoot)
+      return
     }
-    return false
+
+    const upgradePoll = setInterval(() => {
+      if (!splineViewer.shadowRoot) return
+      clearInterval(upgradePoll)
+      installBadgeRule(splineViewer.shadowRoot)
+    }, 100)
+    setTimeout(() => clearInterval(upgradePoll), 10000)
   }
 
-  const tryHide = () => splineViewer.shadowRoot && hideBadge(splineViewer.shadowRoot)
+  const loadSpline = () =>
+    import('@splinetool/viewer').then(() => {
+      startBadgeWatch()
+      // Armed only now, rather than at page load: the scene is what resizes,
+      // and it does not exist until this point. Arming it earlier meant the
+      // observer either fired for unrelated reasons or had already given up by
+      // the time the scene actually arrived.
+      watchAsyncResize(splineViewer.closest('section') || splineViewer)
+    }, (error) => {
+      // The scene is decorative, so a failed chunk (offline, blocked CDN) must
+      // stay silent for the visitor -- section6 keeps its gradient background
+      // and every other section is unaffected.
+      console.warn('[spline] viewer failed to load', error)
+    })
 
-  if (!tryHide()) {
-    const interval = setInterval(() => {
-      if (tryHide()) clearInterval(interval)
-    }, 300)
-    setTimeout(() => clearInterval(interval), 15000)
-  }
+  const splineSection = splineViewer.closest('section') || splineViewer
+  const splineObserver = new IntersectionObserver(
+    (entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return
+      splineObserver.disconnect()
+      loadSpline()
+    },
+    { rootMargin: '200% 0px' },
+  )
+  splineObserver.observe(splineSection)
 }
 
 const testimonialCarousel = document.querySelector('[data-testimonial-carousel]')
@@ -534,7 +700,7 @@ if (faqItems.length) {
         item.classList.add('faq__item--active')
         question.setAttribute('aria-expanded', 'true')
       }
-    })
+    }, untilTeardown)
   })
 }
 
@@ -550,19 +716,28 @@ document.querySelectorAll('.clients__video[data-youtube-id]').forEach((video) =>
     iframe.allow = 'encrypted-media; picture-in-picture'
     iframe.allowFullscreen = true
     video.replaceChildren(iframe)
-  })
+  }, untilTeardown)
 })
 
 // Generic modal system: any [data-modal-open="id"] opens #id, any
 // [data-modal-close] inside an open modal (backdrop or close button) closes
 // it, and Escape closes whichever modal is currently open.
 let openModal = null
+// Where focus was before the modal took it, so it can be handed back on close
+// rather than dumping the user at the top of the document.
+let focusBeforeModal = null
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
 
 const closeModal = () => {
   if (!openModal) return
   openModal.setAttribute('aria-hidden', 'true')
   document.body.style.overflow = ''
   openModal = null
+
+  if (focusBeforeModal && document.contains(focusBeforeModal)) focusBeforeModal.focus()
+  focusBeforeModal = null
 }
 
 document.querySelectorAll('[data-modal-open]').forEach((trigger) => {
@@ -573,16 +748,68 @@ document.querySelectorAll('[data-modal-open]').forEach((trigger) => {
     modal.setAttribute('aria-hidden', 'false')
     document.body.style.overflow = 'hidden'
     openModal = modal
-  })
+    focusBeforeModal = trigger
+
+    // Move focus into the dialog. Without this, focus stays on the trigger
+    // behind the backdrop and a screen reader never enters the dialog at all.
+    const closeButton = modal.querySelector('[data-modal-close]:not(.modal__backdrop)')
+    ;(closeButton || modal.querySelector(FOCUSABLE) || modal).focus()
+  }, untilTeardown)
 })
 
 document.querySelectorAll('[data-modal-close]').forEach((closer) => {
-  closer.addEventListener('click', closeModal)
+  closer.addEventListener('click', closeModal, untilTeardown)
 })
 
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') closeModal()
-})
+  if (event.key === 'Escape') {
+    closeModal()
+    return
+  }
+
+  // Focus trap: while a dialog is open, Tab must cycle within it instead of
+  // walking off into the page behind the backdrop.
+  if (event.key !== 'Tab' || !openModal) return
+
+  const focusable = [...openModal.querySelectorAll(FOCUSABLE)].filter(
+    (element) => element.offsetParent !== null,
+  )
+  if (!focusable.length) return
+
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
+  }
+}, untilTeardown)
+
+// An infinite CSS animation keeps the compositor working every frame no matter
+// where the element sits relative to the viewport, and will-change keeps its
+// layer promoted the whole time on top of that. Two run on this page and both
+// used to run for the entire session: the three works marquee tracks (4380px
+// wide each, 34s loop, permanently promoted) and the final CTA's fill sweep,
+// which repaints text on every frame of a 6s loop.
+//
+// The rootMargin keeps them running slightly beyond the viewport edge so an
+// element is never caught mid-resume as it scrolls in.
+const loopingAnimations = document.querySelectorAll('.works__track, [data-text-fx="fill-loop"]')
+
+if (loopingAnimations.length && 'IntersectionObserver' in window) {
+  const animationObserver = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        entry.target.classList.toggle('anim-paused', !entry.isIntersecting)
+      })
+    },
+    { rootMargin: '15% 0px' },
+  )
+  loopingAnimations.forEach((element) => animationObserver.observe(element))
+}
 
 // Runs last, after section4/team/process have already created their pinned
 // ScrollTriggers (and inserted their pin-spacers) and after the Swiper
@@ -592,4 +819,31 @@ document.addEventListener('keydown', (event) => {
 // elements positioned after section4 in the DOM would be measured against a
 // document that was still missing section4's eventual pin-spacer height,
 // permanently offsetting their trigger start/end by that missing amount.
-initMotion()
+//
+// The returned gsap.context() exists specifically so everything scan.js created
+// can be torn down in one call. It used to be thrown away at the call site,
+// which made that impossible -- the tweens and ScrollTriggers were reachable
+// only from GSAP's own internals.
+const motionContext = initMotion()
+
+// Single teardown for everything this file owns: every page-lifetime listener
+// (via the shared abort signal) plus every tween and ScrollTrigger scan.js
+// built. Nothing calls this while the site is a single static page that never
+// unmounts -- it exists so that if this ever moves behind a router, or a
+// section is re-rendered, the cleanup path is already correct rather than
+// something to reconstruct later. Exposed under a namespaced key so it can be
+// driven from the console when debugging a suspected leak.
+window.__hiup = {
+  teardown() {
+    pageLifetime.abort()
+    // motionContext only owns what scan.js built. The three pinned sections
+    // (section4, team, process) are set up through ScrollTrigger.matchMedia in
+    // this file instead, so reverting the context alone left all three
+    // pin-spacers behind. clearMatchMedia() is not enough either: section4
+    // registers under matchMedia's "all" key, which it does not treat as a
+    // query and so does not clear. Killing the triggers directly with
+    // revert=true covers every one of them regardless of how it was registered.
+    ScrollTrigger.getAll().forEach((trigger) => trigger.kill(true))
+    motionContext.revert()
+  },
+}

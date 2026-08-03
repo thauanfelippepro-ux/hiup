@@ -1,3 +1,139 @@
+/* ---------- Host Grotesk (self-hosted) ---------- */
+/* Served from this origin instead of fonts.googleapis.com. The Google
+   stylesheet was render-blocking on a third-party connection, which the
+   DevTools trace put at 547ms of FCP/LCP delay: the browser had to resolve
+   and connect to two extra hosts, fetch a CSS file, and only then discover
+   which woff2 to download. Self-hosting collapses that chain -- the faces are
+   already in the stylesheet the page loads anyway, and the critical weight is
+   preloaded from the HTML.
+
+   Weight 900 is intentionally gone: the old <link> requested it, but nothing
+   on the page ever computed to it. Every weight below is in active use.
+
+   font-display: swap and the unicode-range split are copied verbatim from what
+   Google served, so text renders and swaps exactly as before, and latin-ext
+   still only downloads if a glyph actually needs it. */
+
+/* latin */
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('/fonts/host-grotesk-300-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('/fonts/host-grotesk-300-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/host-grotesk-400-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/host-grotesk-400-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/host-grotesk-500-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/host-grotesk-500-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/host-grotesk-600-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/host-grotesk-600-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/host-grotesk-700-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/host-grotesk-700-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/host-grotesk-800-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* latin-ext */
+@font-face {
+  font-family: 'Host Grotesk';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/host-grotesk-800-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 :root {
   --bg: #000000;
   --fg: #f9f9f9;
@@ -304,6 +440,15 @@ html::-webkit-scrollbar-thumb {
   --my: 50%;
   mask-image: radial-gradient(circle 260px at var(--mx) var(--my), black 0%, transparent 100%);
   -webkit-mask-image: radial-gradient(circle 260px at var(--mx) var(--my), black 0%, transparent 100%);
+}
+
+/* Applied by main.js whenever the spotlight is fully faded out (which is the
+   whole time on touch devices, where there is no pointer to follow). At that
+   point opacity is already 0, so this changes nothing visually -- it just stops
+   the browser compositing a ~30 megapixel layer that carries both a filter and
+   mix-blend-mode: screen for content nobody can see. */
+.grid-overlay__spotlight--idle {
+  display: none;
 }
 
 /* ---------- Nav ---------- */
@@ -3298,4 +3443,65 @@ html::-webkit-scrollbar-thumb {
   90% {
     background-position: 0% 0;
   }
+}
+
+/* Toggled by main.js on elements running an infinite CSS animation, whenever
+   they scroll out of view. Both animations here otherwise ran for the entire
+   session no matter where the visitor was on the page: the three works marquee
+   tracks are 4380px wide and permanently promoted by will-change, and the final
+   CTA's fill sweep repaints text on every frame.
+
+   Pausing (rather than cancelling) preserves each animation's position, so
+   scrolling back resumes exactly where it left off. Nothing changes while the
+   element is on screen, which is the only time anyone can see it.
+
+   This has to stay at the end of the file: it ties on specificity with
+   .works__track, so source order is what decides the winner. */
+.anim-paused {
+  animation-play-state: paused;
+  will-change: auto;
+}
+
+/* ---------- Focus ---------- */
+/* The stylesheet previously had no :focus or :focus-visible rule anywhere, so
+   keyboard users navigated on whatever default the UA drew -- which on these
+   dark custom controls is effectively invisible. :focus-visible (not :focus)
+   means this only ever appears for keyboard/AT navigation; nothing changes for
+   a mouse or touch user, so the design is untouched.
+
+   The ring uses the site accent and sits outside the element via outline-offset,
+   so it reads against both the dark background and the orange buttons without
+   altering any element's box. */
+:where(a, button, [role='button'], [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* The nav CTA and the section buttons already sit on the accent gradient, where
+   an orange ring would disappear. */
+.btn:focus-visible,
+.finalcta__cta:focus-visible {
+  outline-color: #ffffff;
+}
+
+/* ---------- Modal ---------- */
+/* .modal hides itself with opacity + pointer-events only, which stops the mouse
+   but leaves every control inside it in the tab order. A keyboard user tabbing
+   through the page landed on the close button and the modal body while nothing
+   was visible on screen. visibility:hidden removes them from the tab order;
+   the delayed transition lets the existing 0.25s fade play out in full before
+   it applies, so the close animation is unchanged. */
+.modal {
+  visibility: hidden;
+  transition:
+    opacity 0.25s ease,
+    visibility 0s linear 0.25s;
+}
+
+.modal[aria-hidden='false'] {
+  visibility: visible;
+  transition:
+    opacity 0.25s ease,
+    visibility 0s linear 0s;
 }

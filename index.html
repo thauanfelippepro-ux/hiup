@@ -6,12 +6,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Hiup — produtora audiovisual. Filmes feitos para parar o scroll." />
     <title>Hiup — Produtora</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preload" as="image" href="/assets/bg-hero.webp" fetchpriority="high" />
+    <!-- Weight 800 is what the hero headline renders in, so it is the one weight
+         worth fetching before the stylesheet has even been parsed. The other
+         five are declared in style.css and fetched on demand. -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Host+Grotesk:wght@300;400;500;600;700;800;900&display=swap"
-      rel="stylesheet"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/host-grotesk-800-latin.woff2"
+      crossorigin
     />
+
+    <link rel="canonical" href="https://hiup.vercel.app/" />
+
+    <!-- Social previews. Title and description are the page's own, verbatim.
+         og-image.jpg is generated from the hero background by scripts/optimize-images.mjs
+         at the 1200x630 the scrapers expect -- absolute URLs are required here,
+         relative ones are ignored. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content="PRODUTORAHIUP" />
+    <meta property="og:url" content="https://hiup.vercel.app/" />
+    <meta property="og:title" content="Hiup — Produtora" />
+    <meta
+      property="og:description"
+      content="Hiup — produtora audiovisual. Filmes feitos para parar o scroll."
+    />
+    <meta property="og:image" content="https://hiup.vercel.app/assets/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Hiup — Produtora" />
+    <meta
+      name="twitter:description"
+      content="Hiup — produtora audiovisual. Filmes feitos para parar o scroll."
+    />
+    <meta name="twitter:image" content="https://hiup.vercel.app/assets/og-image.jpg" />
   </head>
   <body>
     <div id="app">
@@ -28,7 +59,7 @@
       </div>
       <header class="nav">
         <a href="#top" class="nav__logo" aria-label="Hiup — topo da página">
-          <img src="/assets/icon-nav.svg" alt="Hiup" />
+          <img src="/assets/icon-nav.svg" alt="Hiup" width="83" height="34" decoding="async" />
         </a>
         <a href="https://wa.me/5541991191972?text=Ol%C3%A1%2C%20vim%20pelo%20site.%20Quero%20um%20or%C3%A7amento%20para%20meu%20v%C3%ADdeo%20." target="_blank" rel="noopener" class="btn nav__cta">
           <span>Start a project</span>
@@ -38,7 +69,7 @@
       <main>
         <section class="hero" id="top">
           <div class="hero__bg">
-            <img src="/assets/bg-hero.jpg" alt="" />
+            <img src="/assets/bg-hero.webp" alt="" width="1920" height="1078" decoding="async" fetchpriority="high" />
           </div>
 
           <div class="hero__content">
@@ -50,7 +81,7 @@
               </span>
               <span class="hero__line">
                 stop
-                <img class="hero__icon" src="/assets/icon-stack.svg" alt="" aria-hidden="true" />
+                <img class="hero__icon" src="/assets/icon-stack.svg" alt="" aria-hidden="true" width="123" height="45" decoding="async" />
                 people
               </span>
               <span class="hero__line">scrolling.</span>
@@ -73,11 +104,11 @@
 
           <section class="section2" id="producao">
             <div class="section2__divider">
-              <img src="/assets/divider-secao-1-2.svg" alt="" aria-hidden="true" />
+              <img src="/assets/divider-secao-1-2.svg" alt="" aria-hidden="true" width="2014" height="543" decoding="async" loading="lazy" />
             </div>
 
             <div class="section2__content">
-              <img class="section2__icon" src="/assets/icon-secao-2-logo.svg" alt="Hiup" data-animate-icon="pop" />
+              <img class="section2__icon" src="/assets/icon-secao-2-logo.svg" alt="Hiup" data-animate-icon="pop" width="160" height="160" decoding="async" loading="lazy" />
 
               <h2 class="section2__heading" data-text-fx="line-wipe">
                 <span class="section2__line">Produção audiovisual para <span class="hl">marcas</span></span>
@@ -103,7 +134,7 @@
 
           <section class="section3" id="atencao">
             <div class="section3__arch">
-              <img src="/assets/secao-3.png" alt="" aria-hidden="true" />
+              <img src="/assets/secao-3.webp" alt="" aria-hidden="true" width="1978" height="1022" decoding="async" loading="lazy" />
             </div>
 
             <div class="section3__content">
@@ -111,7 +142,7 @@
                 <span class="section3__line">A atenção dura</span>
                 <span class="section3__line">
                   segundos. A
-                  <img class="section3__icon" src="/assets/icon-stack-reverse.svg" alt="" aria-hidden="true" />
+                  <img class="section3__icon" src="/assets/icon-stack-reverse.svg" alt="" aria-hidden="true" width="102" height="45" decoding="async" loading="lazy" />
                 </span>
                 <span class="section3__line">percepção fica</span>
               </h2>
@@ -129,7 +160,7 @@
           <section class="section4" id="what-we-do">
             <div class="section4__pin">
               <div class="section4__icon" aria-hidden="true">
-                <img src="/assets/secao-4.png" alt="" />
+                <img src="/assets/secao-4.webp" alt="" width="1920" height="2357" decoding="async" loading="lazy" />
               </div>
 
               <div class="section4__row">
@@ -220,7 +251,7 @@
             <div class="section5__carousel swiper" data-carousel data-animate="scale-in">
               <div class="swiper-wrapper">
                 <article class="section5__slide swiper-slide">
-                  <img src="/assets/realtime-card.png" alt="" />
+                  <img src="/assets/realtime-card.webp" alt="" width="563" height="493" decoding="async" loading="lazy" />
                   <div class="section5__slide-overlay">
                     <div class="section5__slide-row">
                       <h3 class="section5__slide-title">Cobertura Instantânea</h3>
@@ -230,7 +261,7 @@
                 </article>
 
                 <article class="section5__slide swiper-slide">
-                  <img src="/assets/realtime-card.png" alt="" />
+                  <img src="/assets/realtime-card.webp" alt="" width="563" height="493" decoding="async" loading="lazy" />
                   <div class="section5__slide-overlay">
                     <div class="section5__slide-row">
                       <h3 class="section5__slide-title">Edição em Tempo Real</h3>
@@ -240,7 +271,7 @@
                 </article>
 
                 <article class="section5__slide swiper-slide">
-                  <img src="/assets/realtime-card.png" alt="" />
+                  <img src="/assets/realtime-card.webp" alt="" width="563" height="493" decoding="async" loading="lazy" />
                   <div class="section5__slide-overlay">
                     <div class="section5__slide-row">
                       <h3 class="section5__slide-title">Publicação Imediata</h3>
@@ -250,7 +281,7 @@
                 </article>
 
                 <article class="section5__slide swiper-slide">
-                  <img src="/assets/realtime-card.png" alt="" />
+                  <img src="/assets/realtime-card.webp" alt="" width="563" height="493" decoding="async" loading="lazy" />
                   <div class="section5__slide-overlay">
                     <div class="section5__slide-row">
                       <h3 class="section5__slide-title">Mais Alcance Orgânico</h3>
@@ -260,7 +291,7 @@
                 </article>
 
                 <article class="section5__slide swiper-slide">
-                  <img src="/assets/realtime-card.png" alt="" />
+                  <img src="/assets/realtime-card.webp" alt="" width="563" height="493" decoding="async" loading="lazy" />
                   <div class="section5__slide-overlay">
                     <div class="section5__slide-row">
                       <h3 class="section5__slide-title">Conteúdo para Todas as Plataformas</h3>
@@ -309,70 +340,70 @@
             <div class="works__row works__row--left">
               <div class="works__track">
                 <article class="works__tile">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">District 1340<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Aftermovie / Event</p>
                   </div>
                 </article>
                 <article class="works__tile">
-                  <img src="/assets/work-2.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-2.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Boticário<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Commercial / Beauty</p>
                   </div>
                 </article>
                 <article class="works__tile">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Shein<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Fashion Content</p>
                   </div>
                 </article>
                 <article class="works__tile">
-                  <img src="/assets/work-2.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-2.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">District 1340<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Aftermovie / Event</p>
                   </div>
                 </article>
                 <article class="works__tile">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Boticário<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Commercial / Beauty</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">District 1340<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Aftermovie / Event</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-2.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-2.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Boticário<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Commercial / Beauty</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Shein<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Fashion Content</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-2.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-2.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">District 1340<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Aftermovie / Event</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Boticário<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Commercial / Beauty</p>
@@ -384,70 +415,70 @@
             <div class="works__row works__row--right">
               <div class="works__track">
                 <article class="works__tile">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Shein<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Fashion Content</p>
                   </div>
                 </article>
                 <article class="works__tile">
-                  <img src="/assets/work-2.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-2.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">District 1340<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Aftermovie / Event</p>
                   </div>
                 </article>
                 <article class="works__tile">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Boticário<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Commercial / Beauty</p>
                   </div>
                 </article>
                 <article class="works__tile">
-                  <img src="/assets/work-2.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-2.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Shein<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Fashion Content</p>
                   </div>
                 </article>
                 <article class="works__tile">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">District 1340<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Aftermovie / Event</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Shein<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Fashion Content</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-2.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-2.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">District 1340<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Aftermovie / Event</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Boticário<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Commercial / Beauty</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-2.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-2.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Shein<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Fashion Content</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">District 1340<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Aftermovie / Event</p>
@@ -459,70 +490,70 @@
             <div class="works__row works__row--left">
               <div class="works__track">
                 <article class="works__tile">
-                  <img src="/assets/work-2.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-2.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Boticário<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Commercial / Beauty</p>
                   </div>
                 </article>
                 <article class="works__tile">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Shein<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Fashion Content</p>
                   </div>
                 </article>
                 <article class="works__tile">
-                  <img src="/assets/work-2.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-2.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">District 1340<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Aftermovie / Event</p>
                   </div>
                 </article>
                 <article class="works__tile">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Boticário<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Commercial / Beauty</p>
                   </div>
                 </article>
                 <article class="works__tile">
-                  <img src="/assets/work-2.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-2.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Shein<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Fashion Content</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-2.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-2.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Boticário<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Commercial / Beauty</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Shein<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Fashion Content</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-2.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-2.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">District 1340<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Aftermovie / Event</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-1.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-1.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Boticário<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Commercial / Beauty</p>
                   </div>
                 </article>
                 <article class="works__tile" aria-hidden="true">
-                  <img src="/assets/work-2.jpg" alt="" loading="lazy" />
+                  <img src="/assets/work-2.webp" alt="" loading="lazy" width="840" height="318" decoding="async" />
                   <div class="works__tile-overlay">
                     <h3 class="works__tile-title">Shein<span class="works__tile-reg">&reg;</span></h3>
                     <p class="works__tile-cat">Fashion Content</p>
@@ -585,7 +616,7 @@
                 <div class="swiper-slide">
                   <article class="clients__testimonial">
                     <div class="clients__video swiper-no-swiping" data-youtube-id="YnxgIbjrvQw">
-                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" />
+                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" width="480" height="360" decoding="async" />
                       <button class="clients__video-play" type="button" aria-label="Reproduzir depoimento">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M8 5.5V18.5L19 12L8 5.5Z" fill="currentColor" />
@@ -593,7 +624,7 @@
                       </button>
                     </div>
                     <div class="clients__testimonial-head">
-                      <img class="clients__avatar" src="/assets/client-avatar.png" alt="" loading="lazy" />
+                      <img class="clients__avatar" src="/assets/client-avatar.webp" alt="" loading="lazy" width="51" height="51" decoding="async" />
                       <div>
                         <p class="clients__testimonial-name">Cliente 1</p>
                         <p class="clients__testimonial-role">Nicho do cliente</p>
@@ -609,7 +640,7 @@
                 <div class="swiper-slide">
                   <article class="clients__testimonial">
                     <div class="clients__video swiper-no-swiping" data-youtube-id="YnxgIbjrvQw">
-                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" />
+                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" width="480" height="360" decoding="async" />
                       <button class="clients__video-play" type="button" aria-label="Reproduzir depoimento">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M8 5.5V18.5L19 12L8 5.5Z" fill="currentColor" />
@@ -617,7 +648,7 @@
                       </button>
                     </div>
                     <div class="clients__testimonial-head">
-                      <img class="clients__avatar" src="/assets/client-avatar.png" alt="" loading="lazy" />
+                      <img class="clients__avatar" src="/assets/client-avatar.webp" alt="" loading="lazy" width="51" height="51" decoding="async" />
                       <div>
                         <p class="clients__testimonial-name">Cliente 2</p>
                         <p class="clients__testimonial-role">Nicho do cliente</p>
@@ -633,7 +664,7 @@
                 <div class="swiper-slide">
                   <article class="clients__testimonial">
                     <div class="clients__video swiper-no-swiping" data-youtube-id="YnxgIbjrvQw">
-                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" />
+                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" width="480" height="360" decoding="async" />
                       <button class="clients__video-play" type="button" aria-label="Reproduzir depoimento">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M8 5.5V18.5L19 12L8 5.5Z" fill="currentColor" />
@@ -641,7 +672,7 @@
                       </button>
                     </div>
                     <div class="clients__testimonial-head">
-                      <img class="clients__avatar" src="/assets/client-avatar.png" alt="" loading="lazy" />
+                      <img class="clients__avatar" src="/assets/client-avatar.webp" alt="" loading="lazy" width="51" height="51" decoding="async" />
                       <div>
                         <p class="clients__testimonial-name">Cliente 3</p>
                         <p class="clients__testimonial-role">Nicho do cliente</p>
@@ -657,7 +688,7 @@
                 <div class="swiper-slide">
                   <article class="clients__testimonial">
                     <div class="clients__video swiper-no-swiping" data-youtube-id="YnxgIbjrvQw">
-                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" />
+                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" width="480" height="360" decoding="async" />
                       <button class="clients__video-play" type="button" aria-label="Reproduzir depoimento">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M8 5.5V18.5L19 12L8 5.5Z" fill="currentColor" />
@@ -665,7 +696,7 @@
                       </button>
                     </div>
                     <div class="clients__testimonial-head">
-                      <img class="clients__avatar" src="/assets/client-avatar.png" alt="" loading="lazy" />
+                      <img class="clients__avatar" src="/assets/client-avatar.webp" alt="" loading="lazy" width="51" height="51" decoding="async" />
                       <div>
                         <p class="clients__testimonial-name">Cliente 4</p>
                         <p class="clients__testimonial-role">Nicho do cliente</p>
@@ -681,7 +712,7 @@
                 <div class="swiper-slide">
                   <article class="clients__testimonial">
                     <div class="clients__video swiper-no-swiping" data-youtube-id="YnxgIbjrvQw">
-                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" />
+                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" width="480" height="360" decoding="async" />
                       <button class="clients__video-play" type="button" aria-label="Reproduzir depoimento">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M8 5.5V18.5L19 12L8 5.5Z" fill="currentColor" />
@@ -689,7 +720,7 @@
                       </button>
                     </div>
                     <div class="clients__testimonial-head">
-                      <img class="clients__avatar" src="/assets/client-avatar.png" alt="" loading="lazy" />
+                      <img class="clients__avatar" src="/assets/client-avatar.webp" alt="" loading="lazy" width="51" height="51" decoding="async" />
                       <div>
                         <p class="clients__testimonial-name">Cliente 5</p>
                         <p class="clients__testimonial-role">Nicho do cliente</p>
@@ -705,7 +736,7 @@
                 <div class="swiper-slide">
                   <article class="clients__testimonial">
                     <div class="clients__video swiper-no-swiping" data-youtube-id="YnxgIbjrvQw">
-                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" />
+                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" width="480" height="360" decoding="async" />
                       <button class="clients__video-play" type="button" aria-label="Reproduzir depoimento">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M8 5.5V18.5L19 12L8 5.5Z" fill="currentColor" />
@@ -713,7 +744,7 @@
                       </button>
                     </div>
                     <div class="clients__testimonial-head">
-                      <img class="clients__avatar" src="/assets/client-avatar.png" alt="" loading="lazy" />
+                      <img class="clients__avatar" src="/assets/client-avatar.webp" alt="" loading="lazy" width="51" height="51" decoding="async" />
                       <div>
                         <p class="clients__testimonial-name">Cliente 6</p>
                         <p class="clients__testimonial-role">Nicho do cliente</p>
@@ -729,7 +760,7 @@
                 <div class="swiper-slide">
                   <article class="clients__testimonial">
                     <div class="clients__video swiper-no-swiping" data-youtube-id="YnxgIbjrvQw">
-                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" />
+                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" width="480" height="360" decoding="async" />
                       <button class="clients__video-play" type="button" aria-label="Reproduzir depoimento">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M8 5.5V18.5L19 12L8 5.5Z" fill="currentColor" />
@@ -737,7 +768,7 @@
                       </button>
                     </div>
                     <div class="clients__testimonial-head">
-                      <img class="clients__avatar" src="/assets/client-avatar.png" alt="" loading="lazy" />
+                      <img class="clients__avatar" src="/assets/client-avatar.webp" alt="" loading="lazy" width="51" height="51" decoding="async" />
                       <div>
                         <p class="clients__testimonial-name">Cliente 7</p>
                         <p class="clients__testimonial-role">Nicho do cliente</p>
@@ -753,7 +784,7 @@
                 <div class="swiper-slide">
                   <article class="clients__testimonial">
                     <div class="clients__video swiper-no-swiping" data-youtube-id="YnxgIbjrvQw">
-                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" />
+                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" width="480" height="360" decoding="async" />
                       <button class="clients__video-play" type="button" aria-label="Reproduzir depoimento">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M8 5.5V18.5L19 12L8 5.5Z" fill="currentColor" />
@@ -761,7 +792,7 @@
                       </button>
                     </div>
                     <div class="clients__testimonial-head">
-                      <img class="clients__avatar" src="/assets/client-avatar.png" alt="" loading="lazy" />
+                      <img class="clients__avatar" src="/assets/client-avatar.webp" alt="" loading="lazy" width="51" height="51" decoding="async" />
                       <div>
                         <p class="clients__testimonial-name">Cliente 8</p>
                         <p class="clients__testimonial-role">Nicho do cliente</p>
@@ -777,7 +808,7 @@
                 <div class="swiper-slide">
                   <article class="clients__testimonial">
                     <div class="clients__video swiper-no-swiping" data-youtube-id="YnxgIbjrvQw">
-                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" />
+                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" width="480" height="360" decoding="async" />
                       <button class="clients__video-play" type="button" aria-label="Reproduzir depoimento">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M8 5.5V18.5L19 12L8 5.5Z" fill="currentColor" />
@@ -785,7 +816,7 @@
                       </button>
                     </div>
                     <div class="clients__testimonial-head">
-                      <img class="clients__avatar" src="/assets/client-avatar.png" alt="" loading="lazy" />
+                      <img class="clients__avatar" src="/assets/client-avatar.webp" alt="" loading="lazy" width="51" height="51" decoding="async" />
                       <div>
                         <p class="clients__testimonial-name">Cliente 9</p>
                         <p class="clients__testimonial-role">Nicho do cliente</p>
@@ -801,7 +832,7 @@
                 <div class="swiper-slide">
                   <article class="clients__testimonial">
                     <div class="clients__video swiper-no-swiping" data-youtube-id="YnxgIbjrvQw">
-                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" />
+                      <img class="clients__video-thumb" src="https://img.youtube.com/vi/YnxgIbjrvQw/hqdefault.jpg" alt="" loading="lazy" width="480" height="360" decoding="async" />
                       <button class="clients__video-play" type="button" aria-label="Reproduzir depoimento">
                         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                           <path d="M8 5.5V18.5L19 12L8 5.5Z" fill="currentColor" />
@@ -809,7 +840,7 @@
                       </button>
                     </div>
                     <div class="clients__testimonial-head">
-                      <img class="clients__avatar" src="/assets/client-avatar.png" alt="" loading="lazy" />
+                      <img class="clients__avatar" src="/assets/client-avatar.webp" alt="" loading="lazy" width="51" height="51" decoding="async" />
                       <div>
                         <p class="clients__testimonial-name">Cliente 10</p>
                         <p class="clients__testimonial-role">Nicho do cliente</p>
@@ -830,7 +861,7 @@
           <section class="team" id="team">
             <div class="team__pin">
               <div class="team__bg" aria-hidden="true">
-                <img src="/assets/bg-secao-team.svg" alt="" />
+                <img src="/assets/bg-secao-team.svg" alt="" width="1920" height="1222" decoding="async" loading="lazy" />
               </div>
 
               <div class="team__row">
@@ -853,13 +884,13 @@
 
                 <div class="team__stage">
                   <div class="team__strip">
-                    <div class="team__slide team__slide--active" data-index="0"><div class="team__slide-media"><img src="/assets/team-member.jpg" alt="Direção Criativa" /></div></div>
-                    <div class="team__slide" data-index="1"><div class="team__slide-media"><img src="/assets/team-member.jpg" alt="Produção" /></div></div>
-                    <div class="team__slide" data-index="2"><div class="team__slide-media"><img src="/assets/team-member.jpg" alt="Motion" /></div></div>
-                    <div class="team__slide" data-index="3"><div class="team__slide-media"><img src="/assets/team-member.jpg" alt="Captação" /></div></div>
-                    <div class="team__slide" data-index="4"><div class="team__slide-media"><img src="/assets/team-member.jpg" alt="Edição" /></div></div>
-                    <div class="team__slide" data-index="5"><div class="team__slide-media"><img src="/assets/team-member.jpg" alt="Color" /></div></div>
-                    <div class="team__slide" data-index="6"><div class="team__slide-media"><img src="/assets/team-member.jpg" alt="Sound" /></div></div>
+                    <div class="team__slide team__slide--active" data-index="0"><div class="team__slide-media"><img src="/assets/team-member.webp" alt="Direção Criativa" width="492" height="355" decoding="async" loading="lazy" /></div></div>
+                    <div class="team__slide" data-index="1"><div class="team__slide-media"><img src="/assets/team-member.webp" alt="Produção" width="492" height="355" decoding="async" loading="lazy" /></div></div>
+                    <div class="team__slide" data-index="2"><div class="team__slide-media"><img src="/assets/team-member.webp" alt="Motion" width="492" height="355" decoding="async" loading="lazy" /></div></div>
+                    <div class="team__slide" data-index="3"><div class="team__slide-media"><img src="/assets/team-member.webp" alt="Captação" width="492" height="355" decoding="async" loading="lazy" /></div></div>
+                    <div class="team__slide" data-index="4"><div class="team__slide-media"><img src="/assets/team-member.webp" alt="Edição" width="492" height="355" decoding="async" loading="lazy" /></div></div>
+                    <div class="team__slide" data-index="5"><div class="team__slide-media"><img src="/assets/team-member.webp" alt="Color" width="492" height="355" decoding="async" loading="lazy" /></div></div>
+                    <div class="team__slide" data-index="6"><div class="team__slide-media"><img src="/assets/team-member.webp" alt="Sound" width="492" height="355" decoding="async" loading="lazy" /></div></div>
                   </div>
                 </div>
               </div>
@@ -868,7 +899,7 @@
 
           <section class="about" id="sobre">
             <div class="about__bg" aria-hidden="true">
-              <img src="/assets/hiup-wordmark-glow.png" alt="" />
+              <img src="/assets/hiup-wordmark-glow.webp" alt="" width="1373" height="761" decoding="async" loading="lazy" />
             </div>
 
             <div class="about__row">
@@ -896,7 +927,7 @@
 
                 <div class="process__stack">
                   <article class="process__card process__card--active" style="--i: 0">
-                    <img src="/assets/process-1.png" alt="Strategy" />
+                    <img src="/assets/process-1.webp" alt="Strategy" width="762" height="465" decoding="async" loading="lazy" />
                     <div class="process__card-top">
                       <span class="process__card-num">01</span>
                       <span class="process__card-tag">Strategy</span>
@@ -908,7 +939,7 @@
                   </article>
 
                   <article class="process__card" style="--i: 1">
-                    <img src="/assets/process-2.png" alt="Creative Direction" />
+                    <img src="/assets/process-2.webp" alt="Creative Direction" width="762" height="465" decoding="async" loading="lazy" />
                     <div class="process__card-top">
                       <span class="process__card-num">02</span>
                       <span class="process__card-tag">Creative Direction</span>
@@ -920,7 +951,7 @@
                   </article>
 
                   <article class="process__card" style="--i: 2">
-                    <img src="/assets/process-3.png" alt="Production" />
+                    <img src="/assets/process-3.webp" alt="Production" width="762" height="465" decoding="async" loading="lazy" />
                     <div class="process__card-top">
                       <span class="process__card-num">03</span>
                       <span class="process__card-tag">Production</span>
@@ -932,7 +963,7 @@
                   </article>
 
                   <article class="process__card" style="--i: 3">
-                    <img src="/assets/process-4.png" alt="Realtime Editing" />
+                    <img src="/assets/process-4.webp" alt="Realtime Editing" width="762" height="465" decoding="async" loading="lazy" />
                     <div class="process__card-top">
                       <span class="process__card-num">04</span>
                       <span class="process__card-tag">Realtime Editing</span>
@@ -944,7 +975,7 @@
                   </article>
 
                   <article class="process__card" style="--i: 4">
-                    <img src="/assets/process-5.png" alt="Final Delivery" />
+                    <img src="/assets/process-5.webp" alt="Final Delivery" width="762" height="465" decoding="async" loading="lazy" />
                     <div class="process__card-top">
                       <span class="process__card-num">05</span>
                       <span class="process__card-tag">Final Delivery</span>
@@ -960,9 +991,9 @@
           </section>
 
           <div class="faq-cta-shell">
-            <img class="finalcta__wordmark" src="/assets/finalcta-wordmark-bg.png" alt="" aria-hidden="true" />
-            <img class="finalcta__logo-left" src="/assets/finalcta-logo-left.png" alt="" aria-hidden="true" />
-            <img class="finalcta__logo-right" src="/assets/finalcta-logo-right.png" alt="" aria-hidden="true" />
+            <img class="finalcta__wordmark" src="/assets/finalcta-wordmark-bg.webp" alt="" aria-hidden="true" width="1920" height="1092" decoding="async" loading="lazy" />
+            <img class="finalcta__logo-left" src="/assets/finalcta-logo-left.webp" alt="" aria-hidden="true" width="466" height="1364" decoding="async" loading="lazy" />
+            <img class="finalcta__logo-right" src="/assets/finalcta-logo-right.webp" alt="" aria-hidden="true" width="982" height="1176" decoding="async" loading="lazy" />
 
           <section class="faq" id="faq">
             <div class="faq__row">
@@ -1075,7 +1106,7 @@
             <div class="finalcta__content">
               <span class="finalcta__eyebrow" data-animate="fade-down" data-text-fx="fill-loop">PRODUTORAHIUP<span class="hero__reg">&reg;</span></span>
               <h2 class="finalcta__heading" data-text-fx="line-wipe">
-                <span class="finalcta__line">YOUR BRAND <img class="finalcta__heading-tag" src="/assets/icon-stack.svg" alt="" aria-hidden="true" /> ALREADY</span>
+                <span class="finalcta__line">YOUR BRAND <img class="finalcta__heading-tag" src="/assets/icon-stack.svg" alt="" aria-hidden="true" width="123" height="45" decoding="async" /> ALREADY</span>
                 <span class="finalcta__line">COMPETES FOR ATTENTION</span>
                 <span class="finalcta__line">&mdash; EVERY SINGLE DAY.</span>
               </h2>
