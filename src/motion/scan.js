@@ -163,7 +163,21 @@ function bindWordsScrub(root, motionReduced) {
       return
     }
 
-    gsap.set(words, { opacity: 0, y: DISTANCES.sm })
+    // Chrome does not count an element at opacity:0 as painted, so anything
+    // starting fully transparent is invisible to Largest Contentful Paint. The
+    // hero headline is the largest text on the page and is on screen from the
+    // first frame, but it started at 0 and only rose as the scrub advanced --
+    // LCP therefore waited for the visitor to scroll. Lighthouse measured 2.98s
+    // of "element render delay" against that one word.
+    //
+    // Elements below the fold keep the full 0 -> 1 reveal: they are not LCP
+    // candidates, and the effect is the whole point of scrolling into them.
+    // Anything already visible starts from a floor instead, which is close to
+    // where the scrub already puts it at rest and keeps it paintable.
+    const onScreenAtLoad = el.getBoundingClientRect().top < window.innerHeight
+    const fromOpacity = onScreenAtLoad ? 0.35 : 0
+
+    gsap.set(words, { opacity: fromOpacity, y: DISTANCES.sm })
     gsap.to(words, {
       opacity: 1,
       y: 0,

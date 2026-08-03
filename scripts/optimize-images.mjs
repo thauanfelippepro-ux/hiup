@@ -110,7 +110,13 @@ async function main() {
   // secao-4 at 1920x2357 costs ~18 MB of bitmap on a device showing it 590px
   // wide. index.html chooses between these with srcset/sizes; desktop keeps
   // the full-size file.
-  const MOBILE_WIDTH = 800
+  // 640, not 800. Lighthouse measured the widest of these being painted at
+  // 626 CSS px on a Moto G Power, so 800 was shipping pixels nothing displayed.
+  // These are all decorative backdrops sitting behind text or under a mask --
+  // none is examined closely -- so they also take a heavier compression than
+  // the desktop files, where the same asset is shown two to three times larger.
+  const MOBILE_WIDTH = 640
+  const MOBILE_QUALITY = 70
   const mobileRows = []
   for (const target of TARGETS) {
     if (!MOBILE_VARIANTS.has(target.file)) continue
@@ -122,7 +128,7 @@ async function main() {
     const output = join(OUTPUT_DIR, `${name}-mobile.webp`)
     await sharp(source)
       .resize({ width: MOBILE_WIDTH, withoutEnlargement: true })
-      .webp({ quality: target.quality, effort: 6 })
+      .webp({ quality: MOBILE_QUALITY, effort: 6 })
       .toFile(output)
 
     const full = (await stat(join(OUTPUT_DIR, `${name}.webp`))).size
@@ -135,7 +141,7 @@ async function main() {
     })
   }
   if (mobileRows.length) {
-    console.log('\nmobile variants (max 800px wide):')
+    console.log(`\nmobile variants (max ${MOBILE_WIDTH}px wide, quality ${MOBILE_QUALITY}):`)
     console.table(mobileRows)
   }
 
