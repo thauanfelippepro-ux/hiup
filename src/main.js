@@ -823,7 +823,6 @@ if (splineViewer) {
   // explicitly out of scope here and unloading is a behaviour change, not just
   // a rendering one.
   const SPLINE_URL = splineViewer.getAttribute('url')
-  const coarsePointer = window.matchMedia('(hover: none) and (pointer: coarse)')
   let splineSuspended = false
 
   const suspendSpline = () => {
@@ -849,8 +848,20 @@ if (splineViewer) {
     }
   }
 
+  // Every device, not just touch. This was originally gated to coarse pointers
+  // on the reasoning that desktop was out of scope -- which was the wrong call.
+  // Desktop was never exempt from the underlying problem, only from the fix:
+  // testers on desktop report the page starting to stutter at this section and
+  // staying that way afterwards, which is precisely the symptom of a WebGL
+  // render loop that never stops. A full-screen 3D scene redrawing every frame
+  // behind the FAQ and the footer costs a desktop GPU less than a phone's, but
+  // it does not cost nothing.
+  //
+  // Nothing about the scene's appearance changes: it is only ever unloaded when
+  // it is more than two viewport heights away, and restored well before it
+  // comes back into view.
   function watchSplineVisibility() {
-    if (!coarsePointer.matches || typeof splineViewer.unload !== 'function') return
+    if (typeof splineViewer.unload !== 'function') return
 
     // Two margins rather than one, so the boundary cannot thrash: the scene
     // comes back at 150% and only goes away again past 250%. A single threshold
