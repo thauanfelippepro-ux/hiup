@@ -6,7 +6,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Hiup — produtora audiovisual. Filmes feitos para parar o scroll." />
     <title>Hiup — Produtora</title>
-    <link rel="preload" as="image" href="/assets/bg-hero.webp" fetchpriority="high" />
+    <!-- Split by the same breakpoint the <picture> below uses. Without the
+         media attribute a phone preloads the 1920px file and then loads the
+         800px one the picture actually selects -- both, for one image. -->
+    <link
+      rel="preload"
+      as="image"
+      href="/assets/bg-hero-mobile.webp"
+      media="(max-width: 720px)"
+      fetchpriority="high"
+    />
+    <link
+      rel="preload"
+      as="image"
+      href="/assets/bg-hero.webp"
+      media="(min-width: 721px)"
+      fetchpriority="high"
+    />
     <!-- Weight 800 is what the hero headline renders in, so it is the one weight
          worth fetching before the stylesheet has even been parsed. The other
          five are declared in style.css and fetched on demand. -->
@@ -69,7 +85,10 @@
       <main>
         <section class="hero" id="top">
           <div class="hero__bg">
-            <img src="/assets/bg-hero.webp" alt="" width="1920" height="1078" decoding="async" fetchpriority="high" />
+            <picture>
+              <source media="(max-width: 720px)" srcset="/assets/bg-hero-mobile.webp" />
+              <img src="/assets/bg-hero.webp" alt="" width="1920" height="1078" decoding="async" fetchpriority="high" />
+            </picture>
           </div>
 
           <div class="hero__content">
@@ -134,7 +153,10 @@
 
           <section class="section3" id="atencao">
             <div class="section3__arch">
-              <img src="/assets/secao-3.webp" alt="" aria-hidden="true" width="1978" height="1022" decoding="async" loading="lazy" />
+              <picture>
+                <source media="(max-width: 720px)" srcset="/assets/secao-3-mobile.webp" />
+                <img src="/assets/secao-3.webp" alt="" aria-hidden="true" width="1978" height="1022" decoding="async" loading="lazy" />
+              </picture>
             </div>
 
             <div class="section3__content">
@@ -160,7 +182,10 @@
           <section class="section4" id="what-we-do">
             <div class="section4__pin">
               <div class="section4__icon" aria-hidden="true">
-                <img src="/assets/secao-4.webp" alt="" width="1920" height="2357" decoding="async" loading="lazy" />
+                <picture>
+                  <source media="(max-width: 720px)" srcset="/assets/secao-4-mobile.webp" />
+                  <img src="/assets/secao-4.webp" alt="" width="1920" height="2357" decoding="async" loading="lazy" />
+                </picture>
               </div>
 
               <div class="section4__row">
@@ -911,7 +936,10 @@
 
           <section class="about" id="sobre">
             <div class="about__bg" aria-hidden="true">
-              <img src="/assets/hiup-wordmark-glow.webp" alt="" width="1373" height="761" decoding="async" loading="lazy" />
+              <picture>
+                <source media="(max-width: 720px)" srcset="/assets/hiup-wordmark-glow-mobile.webp" />
+                <img src="/assets/hiup-wordmark-glow.webp" alt="" width="1373" height="761" decoding="async" loading="lazy" />
+              </picture>
             </div>
 
             <div class="about__row">
@@ -1003,9 +1031,15 @@
           </section>
 
           <div class="faq-cta-shell">
-            <img class="finalcta__wordmark" src="/assets/finalcta-wordmark-bg.webp" alt="" aria-hidden="true" width="1920" height="1092" decoding="async" loading="lazy" />
+            <picture>
+              <source media="(max-width: 720px)" srcset="/assets/finalcta-wordmark-bg-mobile.webp" />
+              <img class="finalcta__wordmark" src="/assets/finalcta-wordmark-bg.webp" alt="" aria-hidden="true" width="1920" height="1092" decoding="async" loading="lazy" />
+            </picture>
             <img class="finalcta__logo-left" src="/assets/finalcta-logo-left.webp" alt="" aria-hidden="true" width="466" height="1364" decoding="async" loading="lazy" />
-            <img class="finalcta__logo-right" src="/assets/finalcta-logo-right.webp" alt="" aria-hidden="true" width="982" height="1176" decoding="async" loading="lazy" />
+            <picture>
+              <source media="(max-width: 720px)" srcset="/assets/finalcta-logo-right-mobile.webp" />
+              <img class="finalcta__logo-right" src="/assets/finalcta-logo-right.webp" alt="" aria-hidden="true" width="982" height="1176" decoding="async" loading="lazy" />
+            </picture>
 
           <section class="faq" id="faq">
             <div class="faq__row">

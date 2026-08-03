@@ -47,6 +47,19 @@ const TARGETS = [
   { file: 'client-avatar.png', width: null, quality: 88 },
 ]
 
+// Assets whose natural size dwarfs the box a phone paints them into. The rest
+// are already small enough that a second file would cost more in requests than
+// it saves in decode.
+const MOBILE_VARIANTS = new Set([
+  'bg-hero.jpg',
+  'secao-3.png',
+  'secao-4.png',
+  'hiup-wordmark-glow.png',
+  'finalcta-wordmark-bg.png',
+  'finalcta-logo-left.png',
+  'finalcta-logo-right.png',
+])
+
 const kb = (bytes) => Math.round(bytes / 1024)
 
 async function main() {
@@ -89,6 +102,41 @@ async function main() {
       afterKb: kb(outputSize),
       saved: `${Math.round((1 - outputSize / sourceSize) * 100)}%`,
     })
+  }
+
+  // Phone-sized variants of the assets still far larger than any phone shows
+  // them at. WebP fixed transfer size, not decode cost: a browser decodes at
+  // the file's full pixel dimensions regardless of the box it paints into, so
+  // secao-4 at 1920x2357 costs ~18 MB of bitmap on a device showing it 590px
+  // wide. index.html chooses between these with srcset/sizes; desktop keeps
+  // the full-size file.
+  const MOBILE_WIDTH = 800
+  const mobileRows = []
+  for (const target of TARGETS) {
+    if (!MOBILE_VARIANTS.has(target.file)) continue
+    const name = parse(target.file).name
+    const source = join(SOURCE_DIR, target.file)
+    const { width: naturalWidth } = await sharp(source).metadata()
+    if (naturalWidth <= MOBILE_WIDTH) continue
+
+    const output = join(OUTPUT_DIR, `${name}-mobile.webp`)
+    await sharp(source)
+      .resize({ width: MOBILE_WIDTH, withoutEnlargement: true })
+      .webp({ quality: target.quality, effort: 6 })
+      .toFile(output)
+
+    const full = (await stat(join(OUTPUT_DIR, `${name}.webp`))).size
+    const small = (await stat(output)).size
+    mobileRows.push({
+      file: `${name}-mobile.webp`,
+      desktopKb: kb(full),
+      mobileKb: kb(small),
+      saved: `${Math.round((1 - small / full) * 100)}%`,
+    })
+  }
+  if (mobileRows.length) {
+    console.log('\nmobile variants (max 800px wide):')
+    console.table(mobileRows)
   }
 
   // Social preview image. Derived from the hero background rather than being a

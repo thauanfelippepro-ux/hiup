@@ -3215,14 +3215,11 @@ html::-webkit-scrollbar-thumb {
 
   /* ---- Team ---- */
 
-  /* The whole team section is driven by a GSAP pin that only exists at
-     >=721px: the role list and the photo strip are both absolutely positioned
-     inside short, masked viewports, and the pin is what scrolls them. Without
-     it, six of the seven roles and six of the seven photos are simply
-     unreachable. Unpinned, the list becomes a plain wrapped list and the strip
-     a native scroll-snap carousel, so every entry is reachable by touch. */
+  /* The pinned viewport already opens with --row-top of clear space above the
+     label, so section padding on top of that just widened the seam after the
+     clients section. */
   .team {
-    padding-top: 40px;
+    padding-top: 0;
   }
 
   /* The pin runs at this width too now, so the roles and the photo strip keep
@@ -3234,9 +3231,9 @@ html::-webkit-scrollbar-thumb {
      --row-top centres the ~500px of content in the pinned viewport. */
   .team__pin {
     min-height: 100svh;
-    /* Sits the label + roles + photo block near the middle of the pinned
-       viewport rather than up under the nav. */
-    --row-top: clamp(140px, 32vh, 280px);
+    /* High enough to clear the nav, low enough not to open a gap after the
+       clients section. */
+    --row-top: clamp(96px, 21vh, 190px);
   }
 
   /* Label across the top, then roles and photo side by side, keeping the
@@ -3294,16 +3291,26 @@ html::-webkit-scrollbar-thumb {
 
   /* Square at this width instead of the desktop's tall portrait, so the photo
      and the role list together still fit one viewport alongside the label. */
-  /* Square and sized to sit beside the role list rather than under it, leaving
-     the list the rest of the row. */
+  /* The desktop slide is square (measured 327x327) inside a stage that is
+     taller than it (380x560, ratio 0.679). That extra height is what gives the
+     mask room to fade above and below the photo. Making the stage square here
+     too left the slide filling it edge to edge, so the fade ate the rounded
+     border instead of the gap around it.
+     Same two ratios, scaled down: square slide, stage 1.473x its own width. */
   .team__stage {
-    width: min(42vw, 190px);
+    width: min(40vw, 160px);
     max-width: none;
-    height: min(42vw, 190px);
+    height: calc(min(40vw, 160px) * 1.473);
   }
 
+  /* Explicit height, not aspect-ratio: .team__slide-media is height:100% of the
+     slide, so with an auto height the two resolve against each other and the
+     image ends up taller than the stage -- which is what pushed the rounded
+     border past the masked window. A definite height breaks that loop and
+     leaves the stage taller than the photo, as on desktop. */
   .team__slide {
-    aspect-ratio: 1 / 1;
+    height: min(40vw, 160px);
+    margin-bottom: 14px;
   }
 
   /* ---- About ---- */
