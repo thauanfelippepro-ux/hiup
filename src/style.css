@@ -3199,23 +3199,22 @@ html::-webkit-scrollbar-thumb {
 
   /* ---- Process ---- */
 
-  /* Same story as team: the five cards are absolutely stacked on top of each
-     other and the >=721px pin is what slides them apart, so unpinned only the
-     last card is visible. .process__card-body is absolutely bottom-anchored
-     inside the card, and at mobile card heights its desktop type scale makes
-     it taller than the card image it sits on -- it was overflowing out the
-     top of its own card. */
+  /* The pin now runs at this width too, so the cards keep sliding over one
+     another instead of unrolling into a plain five-card list. Everything below
+     restores the pinned geometry (absolute row at --row-top, absolutely stacked
+     cards) with mobile sizing, rather than replacing it with a flow layout.
+     --row-top is picked so the label + deck sit centred in the pinned viewport:
+     ~420px of content in 844px leaves ~211px above. */
   .process__pin {
-    min-height: 0;
+    min-height: 100svh;
+    --row-top: clamp(100px, 25vh, 220px);
   }
 
   .process__row {
-    position: static;
     flex-direction: column;
     align-items: flex-start;
     gap: 32px;
     padding-inline: var(--pad-x);
-    padding-block: 60px 0;
   }
 
   .process__label {
@@ -3227,23 +3226,17 @@ html::-webkit-scrollbar-thumb {
     left: calc(-1 * var(--pad-x));
   }
 
+  /* The stack holds absolutely positioned cards, so it needs an explicit
+     height or it collapses to nothing. A card is as tall as its image at this
+     width -- 465/762 of the stack width, about 216px at 390px -- and the deck
+     adds four 24px offsets on top of that, so ~312px is the real minimum. The
+     clamp leaves slack above it and keeps the last card clear of the bottom
+     edge instead of running past it. */
   .process__stack {
     width: 100%;
     max-width: none;
-    height: auto;
+    height: clamp(330px, 92vw, 470px);
     margin-left: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-
-  /* relative, not static: .process__card-top and .process__card-body are both
-     absolutely positioned against the card. Dropping the card out of the
-     positioned chain re-anchors them to .process__pin, which parks every
-     card's title and description at the bottom of the whole section -- where
-     the card's own overflow:hidden then clips them away entirely. */
-  .process__card {
-    position: relative;
   }
 
   .process__card-top {

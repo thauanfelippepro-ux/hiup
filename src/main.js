@@ -493,8 +493,14 @@ if (process && processCards.length > 1) {
   const STEP = 320
   const pinEnd = () => `+=${(processCards.length - 1) * STEP}`
 
+  // Runs at every width, for the same reason section4's does: the cards
+  // sliding over one another IS the section. Below 721px this used to fall
+  // back to a plain vertical list of five cards, which lost the whole idea and
+  // made the section three times taller. The layout being pinned is the same
+  // at both ends -- only the row's direction changes (see .process__row in the
+  // mobile media query).
   ScrollTrigger.matchMedia({
-    '(min-width: 721px)': () => {
+    all: () => {
       const gridLayers = gsap.utils.toArray('.grid-overlay__base, .grid-overlay__spotlight')
       const pinDistance = (processCards.length - 1) * STEP
 
