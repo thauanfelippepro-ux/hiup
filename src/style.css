@@ -3070,13 +3070,22 @@ html::-webkit-scrollbar-thumb {
      size, and going large here is exactly what put 15.4 megapixels of WebGL on
      a 3.0 megapixel screen and made the page crash. Offsetting costs nothing,
      and .section6__bg already clips at this width. */
+  /* Spline bakes its mark into the canvas for this scene, so hiding the DOM
+     badge (main.js injects a rule for that) does not remove it -- only moving
+     that bottom-right corner outside the clipped area does.
+     It has to move DOWN, not sideways: offsetting horizontally left the left
+     edge of the section uncovered, which is just a black band. Extending the
+     height past the bottom keeps full coverage on both axes and still puts the
+     corner out of frame. Height rather than a uniform scale-up, because the
+     framebuffer grows with the area -- scaling both axes is what put 15.4
+     megapixels on a 3.0 megapixel screen and crashed the page. */
   .section6__bg spline-viewer,
   .section6__vignette,
   .section6__spotlight {
-    top: 6%;
-    left: 8%;
+    top: -10%;
+    left: -5%;
     width: 110%;
-    height: 110%;
+    height: 130%;
   }
 
   .section6__vignette {
@@ -3161,12 +3170,30 @@ html::-webkit-scrollbar-thumb {
     --row-top: clamp(90px, 20vh, 180px);
   }
 
+  /* Label across the top, then roles and photo side by side, keeping the
+     desktop relationship -- read the role, see the face beside it -- instead of
+     stacking the two ends of that pairing a scroll apart. */
   .team__row {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 24px;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      'label label'
+      'list  stage';
+    align-items: center;
+    column-gap: 14px;
+    row-gap: 28px;
     padding-inline: var(--pad-x);
+  }
+
+  .team__label {
+    grid-area: label;
+  }
+
+  .team__list-viewport {
+    grid-area: list;
+  }
+
+  .team__stage {
+    grid-area: stage;
   }
 
   .team__label {
@@ -3194,11 +3221,12 @@ html::-webkit-scrollbar-thumb {
 
   /* Square at this width instead of the desktop's tall portrait, so the photo
      and the role list together still fit one viewport alongside the label. */
+  /* Square and sized to sit beside the role list rather than under it, leaving
+     the list the rest of the row. */
   .team__stage {
-    width: min(78vw, 320px);
+    width: min(42vw, 190px);
     max-width: none;
-    height: min(78vw, 320px);
-    align-self: center;
+    height: min(42vw, 190px);
   }
 
   .team__slide {
