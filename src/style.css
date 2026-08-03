@@ -2817,12 +2817,29 @@ html::-webkit-scrollbar-thumb {
   /* The desktop layout is a two-column grid, where left-aligned copy reads as
      a deliberate column. Collapsed to one column the same alignment just looks
      ragged against the centred sections above and below it. */
+  /* The clamp floors the pull at -30px, but the art is only ~105px tall at
+     this width, so it lost 28% off the top against the desktop's 15%. The
+     unclamped -4vw is the ratio the desktop actually uses, at every width. */
+  .section2__divider {
+    top: -4vw;
+  }
+
   .section3__content {
     text-align: center;
   }
 
   .section3__aside {
     align-items: center;
+  }
+
+  /* The heading's line spans are blocks sized by the line-wipe rule, so
+     inheriting text-align is not enough on its own -- each block also has to be
+     centred within the heading, the same fix section2 and the final CTA carry. */
+  .section3__heading,
+  .section3__heading > * {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
   }
 
   .section3__heading {
@@ -2851,7 +2868,7 @@ html::-webkit-scrollbar-thumb {
        the top ~280px of it, so anchoring them this high left most of the
        screen empty below the deck. Dropping them toward the middle uses that
        space instead of leaving it as a gap before the next section. */
-    --row-top: clamp(120px, 26vh, 240px);
+    --row-top: clamp(80px, 16vh, 150px);
   }
 
   /* The label sits directly above the deck here rather than beside it, so the
@@ -3020,13 +3037,38 @@ html::-webkit-scrollbar-thumb {
      edges of the screen, so the 3D still reads as a ring rather than
      disappearing. .section6__bg already clips at this width, so the extra size
      costs no page overflow. */
+  /* Contrast behind the copy comes from a scrim, NOT from scaling the scene up
+     until its dark middle lands under the text. That approach worked visually
+     and was a disaster on real hardware: spline-viewer renders at
+     devicePixelRatio, so a viewer 240% of the section measured 2808x5469
+     device pixels on a 390x844 phone -- 15.4 megapixels of WebGL framebuffer
+     against a 3.0 megapixel screen, redrawn every frame. That is what made the
+     page stutter and the browser run out of memory.
+     The scene stays at its original size and a gradient darkens the band the
+     text sits in, leaving the ring readable above and below it. */
+  /* Smaller than the 130% the desktop rule would otherwise give this width.
+     The framebuffer scales with the square of this number, and the scrim below
+     now carries the contrast, so the ring does not need the extra size:
+     110% lands near 3 megapixels, roughly one screen, instead of five. */
   .section6__bg spline-viewer,
   .section6__vignette,
   .section6__spotlight {
-    top: -78%;
-    left: -92%;
-    width: 240%;
-    height: 240%;
+    top: -5%;
+    left: -5%;
+    width: 110%;
+    height: 110%;
+  }
+
+  .section6__vignette {
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(0, 0, 0, 0.55) 14%,
+      rgba(0, 0, 0, 0.88) 28%,
+      rgba(0, 0, 0, 0.9) 62%,
+      rgba(0, 0, 0, 0.5) 78%,
+      transparent 100%
+    );
   }
 
   .section6__content {
@@ -3264,6 +3306,29 @@ html::-webkit-scrollbar-thumb {
      at this width. */
   .faq {
     padding-top: clamp(40px, 10vw, 64px);
+  }
+
+  /* Eight stacked backdrop-filter passes, recomposited on every scroll frame.
+     They cost ~8% of frame time even on a desktop GPU under 6x CPU throttling,
+     and backdrop-filter is disproportionately more expensive on phone GPUs
+     than that measurement can show. Three passes keep the depth fade reading
+     as a gradient at this screen size for well under half the work. */
+  .blur-1,
+  .blur-2,
+  .blur-3,
+  .blur-5,
+  .blur-7 {
+    display: none;
+  }
+
+  .blur-4 {
+    mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 55%, transparent 75%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 30%, black 55%, transparent 75%);
+  }
+
+  .blur-6 {
+    mask-image: linear-gradient(to bottom, transparent 45%, black 68%, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 45%, black 68%, black 85%, transparent 100%);
   }
 
   .faq__row {
