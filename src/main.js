@@ -322,7 +322,18 @@ if (section4 && section4Cards.length > 1) {
       cardParts.slice(1).forEach((next, i) => {
         const prev = cardParts[i]
 
-        tl.to(next.card, { x: 0, y: 0, opacity: 1, duration: 1, ease: 'power2.out' }, i)
+        // Full opacity from the first frame of the card's own entrance, rather
+        // than fading up across it. The fade meant a card was still
+        // half-transparent at the moment it was already covering the one below,
+        // which read as hesitant.
+        //
+        // It cannot simply start opaque, though: these cards are translucent by
+        // design (rgba background + backdrop-filter) and all four wait stacked
+        // on the same offset, so making them visible up front lets every card's
+        // text bleed through the ones above it. Staying hidden until its turn
+        // keeps exactly one incoming card on screen at a time.
+        tl.set(next.card, { opacity: 1 }, i)
+          .to(next.card, { x: 0, y: 0, duration: 1, ease: 'power2.out' }, i)
           .to(next.glow, { opacity: 1, duration: 1, ease: 'power2.out' }, i)
           .to(next.num, { color: ACTIVE_NUM, duration: 1 }, i)
           .to(next.cat, { color: ACTIVE_CAT, duration: 1 }, i)
