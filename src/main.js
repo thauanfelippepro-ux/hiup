@@ -292,7 +292,19 @@ if (section4 && section4Cards.length > 1) {
   // the .section4__row rules in the mobile media query).
   ScrollTrigger.matchMedia({
     all: () => {
-      gsap.set(section4Cards.slice(1), { x: 70, y: 110, opacity: 0 })
+      // Cards wait below the fold rather than 110px under their resting spot.
+      // The pin is exactly 100vh, so anything parked a viewport-height down is
+      // off screen while it waits, and travels up into frame at full opacity --
+      // it "arrives" by entering the frame instead of by fading up. Parking it
+      // close by (the old 110px) meant that the instant it turned opaque it was
+      // already sitting visible next to the active card.
+      //
+      // opacity still gates it, but only while it is off screen: without that,
+      // a card parked a viewport below its slot is visible over the NEXT
+      // section while the reader is still scrolling down towards this one.
+      // .section4__pin cannot simply clip its overflow instead -- the 3D icon
+      // deliberately bleeds 49px above and 222px below it.
+      gsap.set(section4Cards.slice(1), { x: 70, y: () => window.innerHeight, opacity: 0 })
 
       const gridLayers = gsap.utils.toArray('.grid-overlay__base, .grid-overlay__spotlight')
       const pinDistance = (section4Cards.length - 1) * STEP
@@ -322,16 +334,9 @@ if (section4 && section4Cards.length > 1) {
       cardParts.slice(1).forEach((next, i) => {
         const prev = cardParts[i]
 
-        // Full opacity from the first frame of the card's own entrance, rather
-        // than fading up across it. The fade meant a card was still
-        // half-transparent at the moment it was already covering the one below,
-        // which read as hesitant.
-        //
-        // It cannot simply start opaque, though: these cards are translucent by
-        // design (rgba background + backdrop-filter) and all four wait stacked
-        // on the same offset, so making them visible up front lets every card's
-        // text bleed through the ones above it. Staying hidden until its turn
-        // keeps exactly one incoming card on screen at a time.
+        // Opaque from the very first frame of its own entrance -- while it is
+        // still below the fold, so nothing pops into view. It then rises into
+        // frame already solid instead of fading up as it goes.
         tl.set(next.card, { opacity: 1 }, i)
           .to(next.card, { x: 0, y: 0, duration: 1, ease: 'power2.out' }, i)
           .to(next.glow, { opacity: 1, duration: 1, ease: 'power2.out' }, i)
