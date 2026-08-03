@@ -935,11 +935,18 @@ html::-webkit-scrollbar-thumb {
   z-index: var(--i);
   height: clamp(150px, 15vw, 190px);
   border-radius: 14px 0 0 14px;
-  background: rgba(10, 8, 6, 0.6);
+  /* Opaque, and deliberately so. The deck used to be a 0.6 alpha panel with a
+     backdrop-filter behind it: the blur was not decoration, it was the only
+     thing stopping the text of the cards underneath from reading straight
+     through the card in front. That made every frame of the pin pay for a
+     backdrop snapshot on five stacked, moving elements.
+
+     A solid fill buys the same legibility for nothing. The card behind keeps
+     its full opacity -- it is not faded out, it is simply the darker surface,
+     and the one in front lights up through .section4__card-glow. */
+  background: #0a0806;
   border: 1px solid rgba(249, 249, 249, 0.08);
   border-right: none;
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
   overflow: hidden;
 }
 
