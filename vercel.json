@@ -1,0 +1,22 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "headers": [
+    {
+      "//": "Vite writes these with a content hash in the filename, so a changed file is always a changed URL. Safe to cache forever.",
+      "source": "/assets/(.*)\\.(js|css)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    },
+    {
+      "//": "Copied verbatim from public/, so the filename does NOT change when the file does. A day of cache plus a week of stale-while-revalidate keeps repeat visits instant without stranding anyone on a stale asset after a redeploy.",
+      "source": "/assets/(.*)\\.(webp|jpg|png|svg)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+      ]
+    },
+    {
+      "//": "Weight and subset are both in the filename and the glyphs behind them do not change, so these can be pinned.",
+      "source": "/fonts/(.*)\\.woff2",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    }
+  ]
+}
