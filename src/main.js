@@ -746,14 +746,94 @@ if (splineViewer) {
     setTimeout(() => clearInterval(upgradePoll), 10000)
   }
 
+  const splineSection = splineViewer.closest('section') || splineViewer
+  let splineReady = false
+
+  // Once the scene has loaded, its WebGL render loop keeps running for the rest
+  // of the session -- while the visitor reads the FAQ, the footer, or scrolls
+  // back to the hero. Nothing in the viewer stops on its own. That is why the
+  // page got heavy FROM the moment this section was reached and never
+  // recovered: a full-screen 3D scene redrawing every frame behind content
+  // nobody is looking at.
+  //
+  // The element exposes load()/unload() but no pause(), so suspending means
+  // unloading. Measured, that is cheap in both directions: unload() takes ~4ms
+  // and collapses the framebuffer from 3.81 to 0.04 megapixels (-99%), freeing
+  // ~4MB of heap; load() restores it from cache with the scene already
+  // downloaded.
+  //
+  // Touch/coarse-pointer only. This would help desktop too, but desktop is
+  // explicitly out of scope here and unloading is a behaviour change, not just
+  // a rendering one.
+  const SPLINE_URL = splineViewer.getAttribute('url')
+  const coarsePointer = window.matchMedia('(hover: none) and (pointer: coarse)')
+  let splineSuspended = false
+
+  const suspendSpline = () => {
+    if (!splineReady || splineSuspended || !SPLINE_URL) return
+    splineSuspended = true
+    try {
+      Promise.resolve(splineViewer.unload?.()).catch(() => {})
+    } catch {
+      splineSuspended = false
+    }
+  }
+
+  const resumeSpline = () => {
+    if (!splineReady || !splineSuspended) return
+    splineSuspended = false
+    try {
+      Promise.resolve(splineViewer.load?.(SPLINE_URL)).then(
+        () => installBadgeRule(splineViewer.shadowRoot || document.createElement('div')),
+        (error) => console.warn('[spline] resume failed', error),
+      )
+    } catch (error) {
+      console.warn('[spline] resume failed', error)
+    }
+  }
+
+  function watchSplineVisibility() {
+    if (!coarsePointer.matches || typeof splineViewer.unload !== 'function') return
+
+    // Two margins rather than one, so the boundary cannot thrash: the scene
+    // comes back at 150% and only goes away again past 250%. A single threshold
+    // would unload and reload on every small scroll across the edge.
+    const resumeObserver = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) resumeSpline()
+      },
+      { rootMargin: '150% 0px' },
+    )
+    const suspendObserver = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((entry) => entry.isIntersecting)) suspendSpline()
+      },
+      { rootMargin: '250% 0px' },
+    )
+    resumeObserver.observe(splineSection)
+    suspendObserver.observe(splineSection)
+
+    // A backgrounded tab keeps the loop alive on some mobile browsers, which is
+    // the worst case: draining the battery for a page nobody is looking at.
+    document.addEventListener(
+      'visibilitychange',
+      () => {
+        if (document.visibilityState === 'hidden') suspendSpline()
+      },
+      untilTeardown,
+    )
+  }
+
   const loadSpline = () =>
     import('@splinetool/viewer').then(() => {
+      splineReady = true
       startBadgeWatch()
       // Armed only now, rather than at page load: the scene is what resizes,
       // and it does not exist until this point. Arming it earlier meant the
       // observer either fired for unrelated reasons or had already given up by
       // the time the scene actually arrived.
-      watchAsyncResize(splineViewer.closest('section') || splineViewer)
+      watchAsyncResize(splineSection)
+      watchSplineVisibility()
     }, (error) => {
       // The scene is decorative, so a failed chunk (offline, blocked CDN) must
       // stay silent for the visitor -- section6 keeps its gradient background
@@ -761,7 +841,6 @@ if (splineViewer) {
       console.warn('[spline] viewer failed to load', error)
     })
 
-  const splineSection = splineViewer.closest('section') || splineViewer
   const splineObserver = new IntersectionObserver(
     (entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) return
