@@ -106,33 +106,96 @@ function watchAsyncResize(target) {
 const gridOverlay = document.querySelector('.grid-overlay')
 const spotlight = document.querySelector('.grid-overlay__spotlight')
 
-// While a section is pinned, the grid tile is shifted DOWN by the scroll
-// distance the pin consumes, so the background appears locked to the fixed
-// icon/cards instead of scrolling normally. This shift is applied via
-// background-position-y (not transform: translateY) on purpose: the grid
-// layers span the full page height, so translating them down would push their
-// box past the document end and inflate the scrollable height with dead space
-// past the footer. Shifting the repeating tile's background-position moves the
-// pattern identically without touching the element box — no dead space, and
-// because the tile repeats, the offset can be held indefinitely with no need
-// to ever reset it (which would itself cause a visible jump).
+// section4, team and process each freeze the grid for the length of their pin,
+// so the background reads as locked behind the fixed cards instead of scrolling
+// past them.
 //
-// section4, team and process all lock the grid this way, one after another
-// down the page. Each pin adds its scroll distance to the shift, so by the
-// time a later pin engages the grid is ALREADY offset by everything the
-// earlier pins pushed. Each section must therefore start its compensation from
-// that accumulated base instead of from 0 — otherwise the grid snaps back to 0
-// the instant the next pin engages, a visible jump at every section boundary
-// (~one full previous-section's worth of pixels).
-const GRID_STEP = 320
-const gridPinDistanceFor = (selector) => {
-  const count = document.querySelectorAll(selector).length
-  return count > 1 ? (count - 1) * GRID_STEP : 0
+// This used to work by re-applying a compensating background-position on every
+// ScrollTrigger update, offset by a running total of how much scroll the pins
+// above had already consumed. That was always a frame too late to be correct:
+// scrolling moves the overlay immediately -- the browser does it, and with a
+// wheel it happens on the compositor thread without waiting for JavaScript at
+// all -- while the compensation could only be written on GSAP's next tick. For
+// that one frame the grid sat displaced by exactly the scroll delta and then
+// snapped back, which is what produced elastic jitter, one wheel notch at a
+// time, and a bigger lurch the faster you scrolled.
+//
+// No amount of tuning the value wins a race the main thread cannot win, so the
+// per-frame write is gone. The layers are re-anchored to the viewport for the
+// duration of a pin instead: a fixed element does not move with scroll, so the
+// grid is genuinely static rather than corrected after the fact, and there is
+// nothing left to keep in sync. The running total is gone with it -- each lock
+// reads the phase the pattern is actually at, so the three pins no longer have
+// to agree on a shared accumulator to avoid snapping at their boundaries.
+
+// Must match the background-size the grid layers are painted at, so the phase
+// can be reduced modulo one tile when the layers change coordinate space.
+const GRID_TILE = 1047.696
+// Every property lockGridToViewport writes, in one place, so releasing a pin
+// and tearing the whole thing down cannot drift apart.
+const clearGridStyles = (layers) => {
+  layers.forEach((layer) => {
+    layer.style.position = ''
+    layer.style.top = ''
+    layer.style.left = ''
+    layer.style.width = ''
+    layer.style.height = ''
+    layer.style.backgroundPositionY = ''
+    if (layer.classList.contains('grid-overlay__base')) {
+      layer.style.maskImage = ''
+      layer.style.webkitMaskImage = ''
+    }
+  })
 }
-const SECTION4_GRID_DIST = gridPinDistanceFor('.section4__card')
-const TEAM_GRID_DIST = gridPinDistanceFor('.team__item[data-index]')
-const TEAM_GRID_BASE = SECTION4_GRID_DIST
-const PROCESS_GRID_BASE = SECTION4_GRID_DIST + TEAM_GRID_DIST
+
+const lockGridToViewport = (layers) => {
+  layers.forEach((layer) => {
+    const rect = layer.getBoundingClientRect()
+    const current = parseFloat(layer.style.backgroundPositionY) || 0
+    // Where the tile pattern sits right now in viewport coordinates. Fixed
+    // positioning re-anchors the box to the viewport, so the same phase has to
+    // be expressed from that origin instead -- reduced modulo one tile, since
+    // the pattern repeats and only the phase is ever visible.
+    const phase = (((rect.top + current) % GRID_TILE) + GRID_TILE) % GRID_TILE
+
+    layer.style.position = 'fixed'
+    layer.style.top = '0px'
+    layer.style.left = `${rect.left}px`
+    layer.style.width = `${rect.width}px`
+    layer.style.height = '100vh'
+    layer.style.backgroundPositionY = `${phase}px`
+
+    // The base layer's fade-in is anchored to the top of the overlay, 500px
+    // above section2. Re-anchored to the viewport it would fade the top of the
+    // screen instead. Every pin sits thousands of pixels below that fade,
+    // where the mask is already fully opaque, so dropping it for the duration
+    // is visually identical.
+    if (layer.classList.contains('grid-overlay__base')) {
+      layer.style.maskImage = 'none'
+      layer.style.webkitMaskImage = 'none'
+    }
+  })
+}
+
+// Hands the layer back to the document's coordinate space without moving the
+// pattern. The offset is derived from where the locked layer actually left the
+// pattern rather than from a running total, which is what makes it continuous
+// in both directions and at any scroll position: a total only stays correct if
+// every pin was entered and left exactly on its boundary, and entering one
+// mid-scroll (or resizing while pinned) breaks that assumption silently.
+const releaseGrid = (layers) => {
+  layers.forEach((layer) => {
+    const lockedPhase = parseFloat(layer.style.backgroundPositionY) || 0
+
+    // Drop the fixed positioning first so the element reports its real
+    // document-flow box. One forced layout per pin boundary, not per frame.
+    clearGridStyles([layer])
+    const rect = layer.getBoundingClientRect()
+
+    const offset = (((lockedPhase - rect.top) % GRID_TILE) + GRID_TILE) % GRID_TILE
+    layer.style.backgroundPositionY = `${offset}px`
+  })
+}
 
 // The spotlight layer spans the whole grid overlay -- measured live, that is
 // 1910 x 15592px, or ~30 megapixels -- and carries both a filter
@@ -161,6 +224,9 @@ if (gridOverlay && spotlight) {
   // forces a synchronous layout each time the pointer moves a pixel. The box
   // only actually moves when the page scrolls or resizes, so it is cached and
   // re-read lazily after one of those invalidates it.
+  // Measured on the spotlight itself rather than on the overlay: the two share
+  // a box normally, but while a pin has the layer re-anchored to the viewport
+  // they do not, and --mx/--my are resolved against the spotlight's own box.
   let overlayRect = null
   const invalidateRect = () => {
     overlayRect = null
@@ -169,7 +235,7 @@ if (gridOverlay && spotlight) {
   window.addEventListener('resize', invalidateRect, untilTeardown)
 
   gridOverlay.addEventListener('pointermove', (event) => {
-    if (!overlayRect) overlayRect = gridOverlay.getBoundingClientRect()
+    if (!overlayRect) overlayRect = spotlight.getBoundingClientRect()
     setX(event.clientX - overlayRect.left)
     setY(event.clientY - overlayRect.top)
 
@@ -246,12 +312,10 @@ if (section4 && section4Cards.length > 1) {
           end: pinEnd,
           scrub: 0.35,
           pin: '.section4__pin',
-          onUpdate(self) {
-            const y = self.progress * pinDistance
-            gridLayers.forEach((layer) => {
-              layer.style.backgroundPositionY = `${y}px`
-            })
-          },
+          onEnter: () => lockGridToViewport(gridLayers),
+          onEnterBack: () => lockGridToViewport(gridLayers),
+          onLeave: () => releaseGrid(gridLayers),
+          onLeaveBack: () => releaseGrid(gridLayers),
         },
       })
 
@@ -271,9 +335,7 @@ if (section4 && section4Cards.length > 1) {
 
       return () => {
         gsap.set(section4Cards.slice(1), { clearProps: 'transform,opacity' })
-        gridLayers.forEach((layer) => {
-          layer.style.backgroundPositionY = ''
-        })
+        clearGridStyles(gridLayers)
         gsap.set(
           cardParts.map((p) => p.glow),
           { clearProps: 'opacity' },
@@ -337,12 +399,11 @@ if (
             const idx = Math.round(self.progress * (teamItems.length - 1))
             teamSlides.forEach((s, i) => s.classList.toggle('team__slide--active', i === idx))
             teamItems.forEach((it, i) => it.classList.toggle('team__item--active', i === idx))
-
-            const y = TEAM_GRID_BASE + self.progress * pinDistance
-            gridLayers.forEach((layer) => {
-              layer.style.backgroundPositionY = `${y}px`
-            })
           },
+          onEnter: () => lockGridToViewport(gridLayers),
+          onEnterBack: () => lockGridToViewport(gridLayers),
+          onLeave: () => releaseGrid(gridLayers),
+          onLeaveBack: () => releaseGrid(gridLayers),
         },
       })
 
@@ -397,9 +458,7 @@ if (
         gsap.set(teamItems, { clearProps: 'color,fontWeight' })
         teamSlides.forEach((s, i) => s.classList.toggle('team__slide--active', i === 0))
         teamItems.forEach((it, i) => it.classList.toggle('team__item--active', i === 0))
-        gridLayers.forEach((layer) => {
-          layer.style.backgroundPositionY = ''
-        })
+        clearGridStyles(gridLayers)
       }
     },
   })
@@ -431,12 +490,11 @@ if (process && processCards.length > 1) {
             // partway through the motion instead of arriving that way.
             const idx = Math.min(Math.ceil(self.progress * (processCards.length - 1)), processCards.length - 1)
             processCards.forEach((c, i) => c.classList.toggle('process__card--active', i === idx))
-
-            const y = PROCESS_GRID_BASE + self.progress * pinDistance
-            gridLayers.forEach((layer) => {
-              layer.style.backgroundPositionY = `${y}px`
-            })
           },
+          onEnter: () => lockGridToViewport(gridLayers),
+          onEnterBack: () => lockGridToViewport(gridLayers),
+          onLeave: () => releaseGrid(gridLayers),
+          onLeaveBack: () => releaseGrid(gridLayers),
           // process is the last of the three grid-locking pins. Once scrolled
           // past, the grid KEEPS its final accumulated offset for the rest of
           // the page (FAQ, final CTA, footer) rather than resetting to 0 —
@@ -481,9 +539,7 @@ if (process && processCards.length > 1) {
       return () => {
         gsap.set(processCards, { clearProps: 'transform,filter' })
         processCards.forEach((c, i) => c.classList.toggle('process__card--active', i === 0))
-        gridLayers.forEach((layer) => {
-          layer.style.backgroundPositionY = ''
-        })
+        clearGridStyles(gridLayers)
       }
     },
   })
