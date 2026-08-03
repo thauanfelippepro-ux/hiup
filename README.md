@@ -4,7 +4,7 @@ Landing page da PRODUTORAHIUP®, produtora audiovisual. Página única, com narr
 conduzida por scroll: seções fixadas (pinning), revelações sincronizadas ao
 rolamento, carrosséis e um fundo 3D interativo.
 
-**No ar:** https://hiup.vercel.app
+**No ar:** https://www.produtorahiup.com
 **Desenvolvimento:** Thauan Felippe
 
 ---

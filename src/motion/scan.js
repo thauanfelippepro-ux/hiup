@@ -233,7 +233,17 @@ function bindLineWipe(root, motionReduced) {
 // SplitText to detect real rendered lines instead.
 function bindLineWipeAuto(root, motionReduced) {
   root.querySelectorAll('[data-text-fx="line-wipe-auto"]').forEach((el) => {
-    const split = new SplitText(el, { type: 'lines', linesClass: 'line-wipe-auto-line' })
+    // aria:'none' stops SplitText mirroring the text into an aria-label on the
+    // element it splits. That label is prohibited on the roles these elements
+    // carry (<p> is paragraph, <span> is generic) and Lighthouse flags it. It
+    // is also unnecessary here: splitting by LINE leaves the words intact in
+    // the DOM, so a screen reader still reads the sentence normally -- unlike a
+    // character split, where the label is the only way to recover the text.
+    const split = new SplitText(el, {
+      type: 'lines',
+      linesClass: 'line-wipe-auto-line',
+      aria: 'none',
+    })
     const lines = split.lines
     if (!lines.length) return
 

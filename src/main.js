@@ -430,7 +430,10 @@ if (
             if (idx === lastTeamIndex) return
             lastTeamIndex = idx
             teamSlides.forEach((s, i) => s.classList.toggle('team__slide--active', i === idx))
-            teamItems.forEach((it, i) => it.classList.toggle('team__item--active', i === idx))
+            teamItems.forEach((it, i) => {
+              it.classList.toggle('team__item--active', i === idx)
+              it.setAttribute('aria-selected', String(i === idx))
+            })
           },
           onEnter: () => lockGridToViewport(gridLayers),
           onEnterBack: () => lockGridToViewport(gridLayers),
@@ -479,17 +482,32 @@ if (
         scrollToIndex(Number(this.dataset.index))
       }
 
+      // role="button" on the <li> was wrong twice over: it is not an allowed
+      // role for a list item, and it strips the listitem semantics, so the
+      // <ul> stopped being a list to a screen reader. Tab/tablist is the
+      // pattern this actually is -- pick a role, see the matching photo -- and
+      // replacing a list's semantics is exactly what role="tablist" is for.
+      const list = teamItems[0]?.parentElement
+      list?.setAttribute('role', 'tablist')
+      list?.setAttribute('aria-label', 'Áreas da equipe')
+
       const interactive = [...teamItems, ...teamSlides]
+      teamItems.forEach((item, i) => {
+        item.setAttribute('role', 'tab')
+        item.setAttribute('aria-selected', String(i === 0))
+      })
       interactive.forEach((element) => {
-        element.setAttribute('role', 'button')
         element.setAttribute('tabindex', '0')
         element.addEventListener('click', onItemClick)
         element.addEventListener('keydown', onItemKeydown)
       })
 
       return () => {
+        list?.removeAttribute('role')
+        list?.removeAttribute('aria-label')
         interactive.forEach((element) => {
           element.removeAttribute('role')
+          element.removeAttribute('aria-selected')
           element.removeAttribute('tabindex')
           element.removeEventListener('click', onItemClick)
           element.removeEventListener('keydown', onItemKeydown)
