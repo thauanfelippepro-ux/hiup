@@ -3236,7 +3236,9 @@ html::-webkit-scrollbar-thumb {
      it, and the section below simply starts sooner. */
   .team__pin {
     min-height: 72svh;
-    --row-top: clamp(70px, 14vh, 130px);
+    /* Centres the block inside the shortened pin: ~230px of content in ~608px
+       of box leaves roughly 190px above it. */
+    --row-top: clamp(110px, 22vh, 200px);
   }
 
   .team {

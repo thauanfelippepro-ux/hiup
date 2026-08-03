@@ -237,7 +237,24 @@ function bindLineWipe(root, motionReduced) {
     tl.to(lines, { clipPath: 'inset(0% 0% 0% 0%)', ease: EASES.emphasized, duration: DURATIONS.slow, stagger: STAGGER.base }, 0)
     tl.to(bars, { left: '100%', ease: EASES.emphasized, duration: DURATIONS.slow, stagger: STAGGER.base }, DURATIONS.slow * 0.5)
 
-    ScrollTrigger.create({ ...makeScrollTrigger(container), animation: tl })
+    // 'play none none none', not the shared 'play reverse play reverse': these
+    // reveals hide their text behind a clip-path until they run, so a reverse
+    // fired at the wrong moment leaves body copy permanently invisible -- which
+    // is what was reported on an iPhone for the about section. A reveal that
+    // only ever plays forward cannot fail that way. The cost is that scrolling
+    // back up no longer re-hides the text, which nobody watches for.
+    ScrollTrigger.create({
+      ...makeScrollTrigger(container),
+      toggleActions: 'play none none none',
+      animation: tl,
+      // A page loaded already scrolled past this point starts the trigger in its
+      // 'after' state, where onEnter never fires -- and with a one-way reveal
+      // that left the text clipped forever. onRefresh runs on creation too, so
+      // anything already behind the reader is simply completed.
+      onRefresh: (self) => {
+        if (self.progress > 0) tl.progress(1)
+      },
+    })
   })
 }
 
@@ -279,7 +296,22 @@ function bindLineWipeAuto(root, motionReduced) {
     tl.to(lines, { clipPath: 'inset(0% 0% 0% 0%)', ease: EASES.emphasized, duration: DURATIONS.slow, stagger: STAGGER.base }, 0)
     tl.to(bars, { left: '100%', ease: EASES.emphasized, duration: DURATIONS.slow, stagger: STAGGER.base }, DURATIONS.slow * 0.5)
 
-    ScrollTrigger.create({ ...makeScrollTrigger(el), animation: tl })
+    // Same one-way reveal as bindLineWipe above, and for the same reason: the
+    // about section's body copy is a line-wipe-auto, and it was reported
+    // invisible on an iPhone. Clipped-until-revealed text must never be able to
+    // reverse back into hiding.
+    ScrollTrigger.create({
+      ...makeScrollTrigger(el),
+      toggleActions: 'play none none none',
+      animation: tl,
+      // A page loaded already scrolled past this point starts the trigger in its
+      // 'after' state, where onEnter never fires -- and with a one-way reveal
+      // that left the text clipped forever. onRefresh runs on creation too, so
+      // anything already behind the reader is simply completed.
+      onRefresh: (self) => {
+        if (self.progress > 0) tl.progress(1)
+      },
+    })
   })
 }
 
