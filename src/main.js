@@ -292,19 +292,25 @@ if (section4 && section4Cards.length > 1) {
   // the .section4__row rules in the mobile media query).
   ScrollTrigger.matchMedia({
     all: () => {
-      // Cards wait below the fold rather than 110px under their resting spot.
-      // The pin is exactly 100vh, so anything parked a viewport-height down is
-      // off screen while it waits, and travels up into frame at full opacity --
-      // it "arrives" by entering the frame instead of by fading up. Parking it
-      // close by (the old 110px) meant that the instant it turned opaque it was
-      // already sitting visible next to the active card.
+      // Cards wait off the right edge and a little low, then travel in
+      // diagonally at full opacity -- the same entrance the process section
+      // uses. Parking them near their resting spot (the original 70/110px)
+      // meant a card was visible beside the active one before its turn; parking
+      // them out of frame instead lets them arrive by entering the frame rather
+      // than by fading up.
       //
-      // opacity still gates it, but only while it is off screen: without that,
-      // a card parked a viewport below its slot is visible over the NEXT
-      // section while the reader is still scrolling down towards this one.
-      // .section4__pin cannot simply clip its overflow instead -- the 3D icon
-      // deliberately bleeds 49px above and 222px below it.
-      gsap.set(section4Cards.slice(1), { x: 70, y: () => window.innerHeight, opacity: 0 })
+      // xPercent is a share of the card's own width, so one value clears the
+      // viewport at every size: the card needs ~95% to pass the right edge at
+      // both 390px and 1920px, and 120% leaves margin. Horizontally it is the
+      // same trick process plays, except .section4__pin cannot clip its own
+      // overflow the way .process__pin does -- the 3D icon deliberately bleeds
+      // 49px above and 222px below the pin and would be cut -- so the layers
+      // rely on the page's own overflow-x for the clip.
+      //
+      // opacity stays as a belt-and-braces gate: it costs nothing, and it means
+      // an unexpected viewport where xPercent lands short still never shows a
+      // card before its turn.
+      gsap.set(section4Cards.slice(1), { xPercent: 120, y: 200, opacity: 0 })
 
       const gridLayers = gsap.utils.toArray('.grid-overlay__base, .grid-overlay__spotlight')
       const pinDistance = (section4Cards.length - 1) * STEP
@@ -338,7 +344,7 @@ if (section4 && section4Cards.length > 1) {
         // still below the fold, so nothing pops into view. It then rises into
         // frame already solid instead of fading up as it goes.
         tl.set(next.card, { opacity: 1 }, i)
-          .to(next.card, { x: 0, y: 0, duration: 1, ease: 'power2.out' }, i)
+          .to(next.card, { xPercent: 0, y: 0, duration: 1, ease: 'power2.out' }, i)
           .to(next.glow, { opacity: 1, duration: 1, ease: 'power2.out' }, i)
           .to(next.num, { color: ACTIVE_NUM, duration: 1 }, i)
           .to(next.cat, { color: ACTIVE_CAT, duration: 1 }, i)
