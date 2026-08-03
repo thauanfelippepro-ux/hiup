@@ -3229,11 +3229,18 @@ html::-webkit-scrollbar-thumb {
      restores the pinned geometry (fixed viewports with their fades, absolutely
      positioned list and strip) at mobile sizes.
      --row-top centres the ~500px of content in the pinned viewport. */
+  /* A full-viewport pin holds 844px of box for ~281px of content here, and the
+     leftover 386px read as dead space before the about section -- padding
+     tweaks cannot touch it because it is the pin's own height. Shortening the
+     pin is what actually closes the gap; the label, roles and photo still fill
+     it, and the section below simply starts sooner. */
   .team__pin {
-    min-height: 100svh;
-    /* High enough to clear the nav, low enough not to open a gap after the
-       clients section. */
-    --row-top: clamp(96px, 21vh, 190px);
+    min-height: 72svh;
+    --row-top: clamp(70px, 14vh, 130px);
+  }
+
+  .team {
+    padding-bottom: 24px;
   }
 
   /* Label across the top, then roles and photo side by side, keeping the
