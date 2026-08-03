@@ -390,8 +390,11 @@ if (
 ) {
   const STEP = 320
 
+  // Runs at every width, like section4 and process. Below 721px this used to
+  // fall back to a swipeable gallery with no active state, so the roles and the
+  // photo no longer moved together -- which is the whole point of the section.
   ScrollTrigger.matchMedia({
-    '(min-width: 721px)': () => {
+    all: () => {
       const slide = teamSlides[0]
       const slideHeight = slide.offsetHeight
       const slideGap = parseFloat(getComputedStyle(slide).marginBottom) || 0

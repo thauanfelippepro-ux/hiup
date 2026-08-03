@@ -2814,6 +2814,17 @@ html::-webkit-scrollbar-thumb {
     margin-bottom: -28vw;
   }
 
+  /* The desktop layout is a two-column grid, where left-aligned copy reads as
+     a deliberate column. Collapsed to one column the same alignment just looks
+     ragged against the centred sections above and below it. */
+  .section3__content {
+    text-align: center;
+  }
+
+  .section3__aside {
+    align-items: center;
+  }
+
   .section3__heading {
     font-size: clamp(1.6rem, 7.4vw, 2rem);
   }
@@ -2840,13 +2851,16 @@ html::-webkit-scrollbar-thumb {
        the top ~280px of it, so anchoring them this high left most of the
        screen empty below the deck. Dropping them toward the middle uses that
        space instead of leaving it as a gap before the next section. */
-    --row-top: clamp(150px, 33vh, 300px);
+    --row-top: clamp(120px, 26vh, 240px);
   }
 
+  /* The label sits directly above the deck here rather than beside it, so the
+     desktop's 24px gap left it crowded between the 3D mark behind it and the
+     top card. */
   .section4__row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 24px;
+    gap: 52px;
     padding-left: var(--pad-x);
   }
 
@@ -3009,10 +3023,10 @@ html::-webkit-scrollbar-thumb {
   .section6__bg spline-viewer,
   .section6__vignette,
   .section6__spotlight {
-    top: -100%;
-    left: -100%;
-    width: 300%;
-    height: 300%;
+    top: -78%;
+    left: -92%;
+    width: 240%;
+    height: 240%;
   }
 
   .section6__content {
@@ -3073,18 +3087,24 @@ html::-webkit-scrollbar-thumb {
     padding-top: 40px;
   }
 
+  /* The pin runs at this width too now, so the roles and the photo strip keep
+     scrolling in step the way they do on desktop instead of unrolling into a
+     swipeable gallery with no active state. The desktop three-column row
+     becomes one column here -- label, role list, photo -- but everything below
+     restores the pinned geometry (fixed viewports with their fades, absolutely
+     positioned list and strip) at mobile sizes.
+     --row-top centres the ~500px of content in the pinned viewport. */
   .team__pin {
-    min-height: 0;
+    min-height: 100svh;
+    --row-top: clamp(90px, 20vh, 180px);
   }
 
   .team__row {
-    position: static;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
-    gap: 28px;
+    gap: 24px;
     padding-inline: var(--pad-x);
-    padding-block: 60px 40px;
   }
 
   .team__label {
@@ -3096,70 +3116,31 @@ html::-webkit-scrollbar-thumb {
     left: calc(-1 * var(--pad-x));
   }
 
+  /* Full width rather than the desktop's fixed column, and short enough that
+     the fade at each edge still reads against ~2.5 visible roles. */
   .team__list-viewport {
     width: 100%;
-    height: auto;
-    overflow: visible;
-    mask-image: none;
-    -webkit-mask-image: none;
-  }
-
-  .team__list {
-    position: static;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 20px;
+    height: clamp(96px, 26vw, 130px);
+    justify-self: start;
   }
 
   .team__item {
-    height: auto;
-    margin-bottom: 0;
-    font-size: clamp(16px, 4.4vw, 20px);
-    /* Nothing toggles the active state without the pin, so the muted grey the
-       desktop uses for "not the current one" would just be six low-contrast
-       labels with no way to change which one is lit. */
-    color: var(--fg);
+    height: clamp(30px, 8vw, 38px);
+    margin-bottom: clamp(10px, 3vw, 14px);
+    font-size: clamp(18px, 5.4vw, 24px);
   }
 
-  .team__item,
-  .team__slide {
-    cursor: default;
-  }
-
+  /* Square at this width instead of the desktop's tall portrait, so the photo
+     and the role list together still fit one viewport alongside the label. */
   .team__stage {
-    width: 100%;
+    width: min(78vw, 320px);
     max-width: none;
-    height: auto;
-    overflow-x: auto;
-    overflow-y: hidden;
-    mask-image: none;
-    -webkit-mask-image: none;
-    scroll-snap-type: x mandatory;
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-    margin-right: calc(-1 * var(--pad-x));
-    padding-right: var(--pad-x);
-  }
-
-  .team__stage::-webkit-scrollbar {
-    display: none;
-  }
-
-  .team__strip {
-    position: static;
-    width: auto;
-    display: flex;
-    gap: 14px;
+    height: min(78vw, 320px);
+    align-self: center;
   }
 
   .team__slide {
-    flex: 0 0 min(72vw, 300px);
-    height: auto;
     aspect-ratio: 1 / 1;
-    margin-bottom: 0;
-    opacity: 1;
-    transform: none;
-    scroll-snap-align: start;
   }
 
   /* ---- About ---- */
@@ -3278,6 +3259,13 @@ html::-webkit-scrollbar-thumb {
      clears the answer list only because that list is a 640px column centred in
      a much wider row. Once the list fills the row, the label sits directly on
      top of the first question. */
+  /* 80px top is a desktop rhythm; against the tighter mobile stack it read as
+     a gap rather than a section break. Brought in line with the other sections
+     at this width. */
+  .faq {
+    padding-top: clamp(40px, 10vw, 64px);
+  }
+
   .faq__row {
     max-width: 100%;
     padding-inline: var(--pad-x);
@@ -3340,14 +3328,18 @@ html::-webkit-scrollbar-thumb {
     width: clamp(120px, 34vw, 200px);
   }
 
+  /* The desktop -2vw anchors the arrow just past the edge of a much wider
+     viewport. At this width the same offset leaves it sitting well inside the
+     frame, reading as centred art rather than a corner anchor. */
   .finalcta__logo-right {
     width: clamp(240px, 72vw, 400px);
+    right: -20vw;
   }
 
   .finalcta__footer {
     flex-wrap: wrap;
     gap: 6px 12px;
-    padding: 20px var(--pad-x);
+    padding: 48px var(--pad-x) 20px;
     padding-bottom: calc(20px + env(safe-area-inset-bottom));
   }
 
