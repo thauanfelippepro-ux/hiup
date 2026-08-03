@@ -4,7 +4,7 @@ import './style.css'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import Swiper from 'swiper'
-import { Autoplay, Pagination } from 'swiper/modules'
+import { Autoplay, Navigation, Pagination } from 'swiper/modules'
 import './motion/config.js'
 import { prefersReducedMotion } from './motion/config.js'
 import { initMotion } from './motion/scan.js'
@@ -777,7 +777,7 @@ const testimonialCarousel = document.querySelector('[data-testimonial-carousel]'
 
 if (testimonialCarousel) {
   new Swiper(testimonialCarousel, {
-    modules: [Pagination],
+    modules: [Navigation, Pagination],
     slidesPerView: 'auto',
     centeredSlides: true,
     spaceBetween: 24,
@@ -787,6 +787,12 @@ if (testimonialCarousel) {
     pagination: {
       el: '.clients__dots',
       clickable: true,
+    },
+    // Dragging works, but it is not discoverable and it is awkward one-handed
+    // on a phone. Explicit controls sit either side of the dots.
+    navigation: {
+      prevEl: '.clients__nav--prev',
+      nextEl: '.clients__nav--next',
     },
   })
 }

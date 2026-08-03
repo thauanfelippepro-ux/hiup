@@ -689,8 +689,14 @@ html::-webkit-scrollbar-thumb {
   display: block;
 }
 
+/* justify-content matters once this wraps: the line box is centred by the
+   margin:auto rule further down, but the flex items inside it still packed to
+   the start, so a wrapped word ("mais" dropping to its own row) sat left of
+   centre while the line around it looked centred. */
 .section2__line--gap {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 0.3em;
 }
 
@@ -1710,13 +1716,66 @@ html::-webkit-scrollbar-thumb {
   overflow: hidden;
 }
 
+/* Arrows either side of the dots. The margin that used to sit on .clients__dots
+   moves up here so the whole control row is spaced as one unit. */
+.clients__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 2vw, 20px);
+  margin-top: clamp(24px, 3vw, 32px);
+}
+
+.clients__nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgba(249, 249, 249, 0.18);
+  border-radius: 50%;
+  background: rgba(10, 8, 6, 0.5);
+  color: var(--fg);
+  cursor: pointer;
+  transition: border-color 0.25s ease, background 0.25s ease, color 0.25s ease;
+}
+
+.clients__nav svg {
+  width: 18px;
+  height: 18px;
+}
+
+.clients__nav:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Swiper sets this on a control when the carousel cannot move further. The
+   deck loops, so it should not normally appear -- it is here so the button
+   never looks live while doing nothing. */
+.clients__nav.swiper-button-disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 .clients__dots {
   position: static;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-top: clamp(24px, 3vw, 32px);
+}
+
+/* Swiper sizes its pagination through
+   .swiper-pagination-bullets.swiper-pagination-horizontal { width: 100% },
+   which is two classes and therefore outranks a plain .clients__dots no matter
+   what order the sheets load in. Left as-is it stretched the dots across the
+   whole control row and pushed the arrows past the edges of the screen. This
+   selector is deliberately more specific than Swiper's. */
+.clients__controls .clients__dots.swiper-pagination {
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .clients__dots .swiper-pagination-bullet {
@@ -2887,7 +2946,7 @@ html::-webkit-scrollbar-thumb {
   .section4__row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 120px;
+    gap: 158px;
     padding-left: var(--pad-x);
   }
 
@@ -2940,7 +2999,7 @@ html::-webkit-scrollbar-thumb {
   /* Centred on the pin like the desktop, but nudged down so it sits behind the
      deck rather than behind the label above it. */
   .section4__icon {
-    width: min(125vw, 520px);
+    width: min(152vw, 640px);
     top: 62%;
   }
 
@@ -3120,19 +3179,27 @@ html::-webkit-scrollbar-thumb {
     display: none;
   }
 
-  .clients__icon-row-inner,
-  .clients__icon-row-inner--8 {
+  /* Three over four, the same pyramid the desktop shows. Collapsing both rows
+     to three columns left the fourth logo of the bottom row wrapping onto a
+     line of its own, hard against the left edge. */
+  .clients__icon-row-inner {
     --icon-col: auto;
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .clients__icon-cell {
-    min-height: 72px;
-    padding: 0 clamp(10px, 3vw, 16px);
+  .clients__icon-row-inner--8 {
+    --icon-col: auto;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .clients__icon-cell {
+    min-height: 64px;
+    padding: 0 clamp(6px, 2vw, 12px);
+  }
+
+  /* Smaller so four fit the bottom row without crowding. */
   .clients__icon {
-    height: 22px;
+    height: 18px;
     -webkit-mask-position: center;
     mask-position: center;
   }
@@ -3167,7 +3234,9 @@ html::-webkit-scrollbar-thumb {
      --row-top centres the ~500px of content in the pinned viewport. */
   .team__pin {
     min-height: 100svh;
-    --row-top: clamp(90px, 20vh, 180px);
+    /* Sits the label + roles + photo block near the middle of the pinned
+       viewport rather than up under the nav. */
+    --row-top: clamp(140px, 32vh, 280px);
   }
 
   /* Label across the top, then roles and photo side by side, keeping the
@@ -3196,13 +3265,17 @@ html::-webkit-scrollbar-thumb {
     grid-area: stage;
   }
 
+  /* Shrunk to its own text so the accent rule under it can match the title
+     rather than running the width of the row. */
   .team__label {
     max-width: none;
     white-space: normal;
+    justify-self: start;
   }
 
   .team__label-line {
-    left: calc(-1 * var(--pad-x));
+    left: 0;
+    right: 0;
   }
 
   /* Full width rather than the desktop's fixed column, and short enough that
@@ -3238,8 +3311,11 @@ html::-webkit-scrollbar-thumb {
   /* .about__label is white-space:nowrap and .about__text has a 640px min
      measure, so side by side they are wider than the row long before mobile
      widths -- .about's overflow:hidden was clipping the paragraph text. */
+  /* The desktop pull is sized against a wordmark that is far larger there; at
+     this width it just left a long empty run between the team photo and the
+     first line of copy. */
   .about {
-    padding-top: clamp(120px, 34vw, 200px);
+    padding-top: clamp(56px, 15vw, 100px);
   }
 
   .about__bg {
