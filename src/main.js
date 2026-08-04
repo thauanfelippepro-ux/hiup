@@ -395,15 +395,13 @@ if (section4 && section4Cards.length > 1) {
       // opacity stays as a belt-and-braces gate: it costs nothing, and it means
       // an unexpected viewport where xPercent lands short still never shows a
       // card before its turn.
-      // Quando o CSS de scroll-driven animation cobre a entrada dos cards (o
-      // MESMO par media+supports do bloco "Section 4: entrada dos cards no
-      // compositor" no style.css), o GSAP fica fora do caminho: nem parking,
-      // nem tweens de entrada -- só o toggle da classe --lit no onUpdate.
-      // Animar o mesmo transform pelos dois lados seria os dois brigando
-      // frame a frame pelo mesmo estilo.
-      const cssCards = gridLockDisabled && CSS.supports('animation-timeline', 'view()')
-
-      if (!cssCards) gsap.set(section4Cards.slice(1), { xPercent: 120, y: 200, opacity: 0 })
+      // No touch o GSAP fica fora da entrada dos cards por completo: nem
+      // parking, nem tweens. O CSS (bloco "Section 4: entrada dos cards no
+      // touch", mesmo media query de gridLockDisabled) estaciona os cards e a
+      // classe --in, togglada no onUpdate abaixo, dispara a entrada como uma
+      // transição por tempo. Animar o mesmo transform pelos dois lados seria
+      // os dois brigando frame a frame pelo mesmo estilo.
+      if (!gridLockDisabled) gsap.set(section4Cards.slice(1), { xPercent: 120, y: 200, opacity: 0 })
 
       const gridLayers = gsap.utils.toArray('.grid-overlay__base, .grid-overlay__spotlight')
       const pinDistance = (section4Cards.length - 1) * STEP
@@ -432,7 +430,12 @@ if (section4 && section4Cards.length > 1) {
             const idx = Math.min(Math.ceil(self.progress * (section4Cards.length - 1)), section4Cards.length - 1)
             if (idx === lastSection4Index) return
             lastSection4Index = idx
-            section4Cards.forEach((c, i) => c.classList.toggle('section4__card--lit', i === idx))
+            section4Cards.forEach((c, i) => {
+              c.classList.toggle('section4__card--lit', i === idx)
+              // Touch: a pilha é cumulativa -- todo card até o ativo fica em
+              // cena, e recuar o scroll desempilha na ordem inversa.
+              if (gridLockDisabled) c.classList.toggle('section4__card--in', i <= idx)
+            })
           },
           onEnter: () => lockGridToViewport(gridLayers),
           onEnterBack: () => lockGridToViewport(gridLayers),
@@ -449,7 +452,7 @@ if (section4 && section4Cards.length > 1) {
       // -- e são as duas seções que ficaram lisas no celular com o pin sticky,
       // enquanto esta continuou derrubando fps. O estado visual é a classe
       // --lit togglada no onUpdate acima, com o fade por transição CSS.
-      if (!cssCards) {
+      if (!gridLockDisabled) {
         section4Cards.slice(1).forEach((next, i) => {
           // Opaque from the very first frame of its own entrance -- while it is
           // still below the fold, so nothing pops into view. It then rises into
@@ -462,7 +465,10 @@ if (section4 && section4Cards.length > 1) {
         stickyPin.cleanup()
         gsap.set(section4Cards.slice(1), { clearProps: 'transform,opacity' })
         clearGridStyles(gridLayers)
-        section4Cards.forEach((c, i) => c.classList.toggle('section4__card--lit', i === 0))
+        section4Cards.forEach((c, i) => {
+          c.classList.toggle('section4__card--lit', i === 0)
+          c.classList.remove('section4__card--in')
+        })
       }
     },
   })
