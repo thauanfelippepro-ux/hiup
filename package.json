@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@splinetool/viewer": "^1.12.98",
+    "@vercel/speed-insights": "^2.0.0",
     "gsap": "^3.15.0",
     "swiper": "^14.0.5"
   }

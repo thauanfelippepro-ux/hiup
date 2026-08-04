@@ -8,6 +8,7 @@ import { Autoplay, Navigation, Pagination } from 'swiper/modules'
 import './motion/config.js'
 import { prefersReducedMotion } from './motion/config.js'
 import { initMotion } from './motion/scan.js'
+import { injectSpeedInsights } from '@vercel/speed-insights'
 
 // The nav (position:fixed) and the hero (fully above the fold) both need a
 // one-time load-in sequence, not the generic scroll-linked scanner used for
@@ -44,15 +45,27 @@ if (!prefersReducedMotion()) {
   if (heroCaption) tl.fromTo(heroCaption, { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5 }, 0.7)
 }
 
-// The Host Grotesk webfont can finish loading/swapping in after ScrollTrigger
-// has already measured pin start/end positions from the fallback font's
-// metrics. That leaves every pinned section (section4, team) with a stale
-// boundary, which shows up as a jump/duplicate-render flash the first time
-// the user scrolls into one. Recalculating once the real font is ready
-// keeps every pin's measurements accurate for the whole session.
-if (document.fonts && document.fonts.ready) {
-  document.fonts.ready.then(() => ScrollTrigger.refresh())
-}
+// Aqui existia um ScrollTrigger.refresh() disparado em document.fonts.ready,
+// para o caso de a Host Grotesk trocar DEPOIS que os pins já tinham sido
+// medidos com as métricas da fonte fallback -- o que deixaria cada pin com uma
+// fronteira defasada.
+//
+// Medido, esse caso não acontece nesta página. As fontes carregam via
+// <link rel="preload"> no HTML, então baixam em paralelo e ficam prontas bem
+// antes de este módulo sequer executar: 49ms contra 145ms (wi-fi), 234 contra
+// 640 (4G lento + CPU 4x), 524 contra 1356 (3G lento + CPU 6x). Quando os pins
+// são medidos, a fonte real já está aplicada.
+//
+// A remoção foi validada comparando o comportamento OBSERVÁVEL do pin -- a
+// posição real onde ele engata, amostrada de 40 em 40px -- com e sem a chamada,
+// inclusive forçando a fonte a chegar 2s atrasada. As quatro séries deram
+// exatamente os mesmos valores, então a chamada não corrigia nada. Custava ~16
+// layouts por carregamento (168 -> 155 com a fonte normal, 177 -> 158 com ela
+// atrasada), porque refresh() re-mede TODOS os triggers da página, e scan.js
+// cria vários.
+//
+// Se o preload das fontes sair do HTML, este raciocínio cai junto: aí a fonte
+// volta a poder chegar depois dos pins, e o refresh precisa voltar.
 
 // section6's <spline-viewer> loads its 3D scene from a remote URL and keeps
 // resizing/shifting section6's layout well after the page's own load event --
@@ -915,7 +928,7 @@ if (splineViewer) {
       splineObserver.disconnect()
       loadSpline()
     },
-    { rootMargin: '200% 0px' },
+    { rootMargin: '50% 0px' },
   )
   splineObserver.observe(splineSection)
 }
@@ -1087,6 +1100,22 @@ if (loopingAnimations.length && 'IntersectionObserver' in window) {
 // which made that impossible -- the tweens and ScrollTriggers were reachable
 // only from GSAP's own internals.
 const motionContext = initMotion()
+
+// Vercel Speed Insights: coleta Core Web Vitals (LCP, INP, CLS) de visitantes
+// reais em produção. Fica por último de propósito -- injeta um <script> externo,
+// e nada acima pode esperar por ele.
+//
+// Este é um projeto Vite/vanilla, então usa a entrada raiz do pacote
+// (injectSpeedInsights), não o componente `/next` da documentação.
+//
+// A checagem de hostname (e não só import.meta.env.PROD) é o que importa aqui:
+// `npm run preview` serve o build de produção, então PROD já é true ali, e o
+// tracker ficava tentando /_vercel/speed-insights/script.js contra um servidor
+// que não tem esse endpoint -- um 404 no console a cada carregamento local, sem
+// coletar nada. O endpoint só existe quando a Vercel serve a página.
+if (import.meta.env.PROD && !/^(localhost|127\.|\[::1\])/.test(location.hostname)) {
+  injectSpeedInsights()
+}
 
 // Single teardown for everything this file owns: every page-lifetime listener
 // (via the shared abort signal) plus every tween and ScrollTrigger scan.js
