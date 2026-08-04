@@ -357,23 +357,9 @@ const section4 = document.querySelector('.section4')
 const section4Cards = gsap.utils.toArray('.section4__card')
 
 if (section4 && section4Cards.length > 1) {
-  const ACTIVE_NUM = 'rgba(255, 255, 255, 0.75)'
-  const INACTIVE_NUM = '#e95004'
-  const ACTIVE_CAT = 'rgba(255, 255, 255, 0.85)'
-  const INACTIVE_CAT = '#6b6b6b'
-  const ACTIVE_TEXT = '#ffffff'
-  const INACTIVE_TEXT = '#6b6b6b'
-
-  const cardParts = section4Cards.map((card) => ({
-    card,
-    glow: card.querySelector('.section4__card-glow'),
-    num: card.querySelector('.section4__card-num'),
-    cat: card.querySelector('.section4__card-cat'),
-    text: card.querySelector('.section4__card-text'),
-  }))
-
   const STEP = 320
   const pinEnd = () => `+=${(section4Cards.length - 1) * STEP}`
+  let lastSection4Index = -1
 
   // Unlike team and process below, this pin runs at EVERY width. The stacked
   // card reveal is the whole point of the section, and dropping to a plain
@@ -414,6 +400,7 @@ if (section4 && section4Cards.length > 1) {
       // which would make the pin (already fixed) and the grid offset (still
       // tied to the exact progress) briefly disagree — visible as the grid
       // snapping/bouncing on quick scroll direction changes.
+      lastSection4Index = -1
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: section4,
@@ -422,6 +409,14 @@ if (section4 && section4Cards.length > 1) {
           scrub: PIN_SCRUB,
           pinType: PIN_TYPE,
           pin: stickyPin.pin,
+          onUpdate(self) {
+            // Ceil, pelo mesmo motivo do process: o card vira o ativo no
+            // instante em que começa a entrar, não no meio da entrada.
+            const idx = Math.min(Math.ceil(self.progress * (section4Cards.length - 1)), section4Cards.length - 1)
+            if (idx === lastSection4Index) return
+            lastSection4Index = idx
+            section4Cards.forEach((c, i) => c.classList.toggle('section4__card--lit', i === idx))
+          },
           onEnter: () => lockGridToViewport(gridLayers),
           onEnterBack: () => lockGridToViewport(gridLayers),
           onLeave: () => releaseGrid(gridLayers),
@@ -429,36 +424,26 @@ if (section4 && section4Cards.length > 1) {
         },
       })
 
-      cardParts.slice(1).forEach((next, i) => {
-        const prev = cardParts[i]
-
+      // O timeline agora só move transform -- a única propriedade que o
+      // compositor anima sem repintar. Este loop tinha mais 8 tweens por
+      // segmento (glow de entrada e saída, e as cores de num/cat/text dos dois
+      // cards), todos presos ao scrub: cada frame de scroll interpolava cor e
+      // repintava os textos da seção. team e process nunca tiveram esse custo
+      // -- e são as duas seções que ficaram lisas no celular com o pin sticky,
+      // enquanto esta continuou derrubando fps. O estado visual é a classe
+      // --lit togglada no onUpdate acima, com o fade por transição CSS.
+      section4Cards.slice(1).forEach((next, i) => {
         // Opaque from the very first frame of its own entrance -- while it is
         // still below the fold, so nothing pops into view. It then rises into
         // frame already solid instead of fading up as it goes.
-        tl.set(next.card, { opacity: 1 }, i)
-          .to(next.card, { xPercent: 0, y: 0, duration: 1, ease: 'power2.out' }, i)
-          .to(next.glow, { opacity: 1, duration: 1, ease: 'power2.out' }, i)
-          .to(next.num, { color: ACTIVE_NUM, duration: 1 }, i)
-          .to(next.cat, { color: ACTIVE_CAT, duration: 1 }, i)
-          .to(next.text, { color: ACTIVE_TEXT, duration: 1 }, i)
-          .to(prev.glow, { opacity: 0, duration: 1, ease: 'power2.out' }, i)
-          .to(prev.num, { color: INACTIVE_NUM, duration: 1 }, i)
-          .to(prev.cat, { color: INACTIVE_CAT, duration: 1 }, i)
-          .to(prev.text, { color: INACTIVE_TEXT, duration: 1 }, i)
+        tl.set(next, { opacity: 1 }, i).to(next, { xPercent: 0, y: 0, duration: 1, ease: 'power2.out' }, i)
       })
 
       return () => {
         stickyPin.cleanup()
         gsap.set(section4Cards.slice(1), { clearProps: 'transform,opacity' })
         clearGridStyles(gridLayers)
-        gsap.set(
-          cardParts.map((p) => p.glow),
-          { clearProps: 'opacity' },
-        )
-        gsap.set(
-          cardParts.flatMap((p) => [p.num, p.cat, p.text]),
-          { clearProps: 'color' },
-        )
+        section4Cards.forEach((c, i) => c.classList.toggle('section4__card--lit', i === 0))
       }
     },
   })
