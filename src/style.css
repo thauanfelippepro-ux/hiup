@@ -3733,6 +3733,73 @@ html::-webkit-scrollbar-thumb {
   will-change: auto;
 }
 
+/* ---------- Section 4: entrada dos cards no compositor (touch) ---------- */
+/* No touch, a entrada dos cards deixa de ser o timeline GSAP (main thread,
+   sempre um frame atrás de um scroll que roda no compositor -- o tremor que
+   sobrou depois do pin sticky) e vira uma scroll-driven animation: o compositor
+   amostra o progresso do scroll e posiciona o card na MESMA passada, sem
+   JavaScript no caminho. main.js detecta este mesmo par media+supports e pula
+   os tweens de entrada; onde não há suporte (Safari < 26), nada disto aplica e
+   o caminho GSAP continua exatamente como era.
+
+   O range 'contain' casa por construção com o pin sticky: contain 0% é o topo
+   da seção no topo da viewport (onde o sticky engata) e contain 100% é o fundo
+   da seção no fundo da viewport (onde solta) -- o mesmo intervalo de
+   'top top' até '+=1280' do ScrollTrigger, seja qual for a altura real que
+   setupStickyPin mediu. Quatro cards, 25% cada.
+
+   O salto de opacity nos primeiros 4% acontece com o card ainda a ~115% da
+   própria largura para fora da tela (clipado por .section4), então nunca é
+   visível -- é o mesmo cinto-e-suspensório do caminho GSAP, garantindo que um
+   card estacionado jamais apareça antes da vez dele. */
+@media (hover: none) and (pointer: coarse) {
+  @supports (animation-timeline: view()) {
+    .section4 {
+      view-timeline: --s4-progress block;
+    }
+
+    .section4__stack .section4__card:nth-child(n + 2) {
+      animation-name: s4-card-enter;
+      animation-duration: 1s;
+      animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+      animation-fill-mode: both;
+      animation-timeline: --s4-progress;
+    }
+
+    .section4__stack .section4__card:nth-child(2) {
+      animation-range: contain 0% contain 25%;
+    }
+
+    .section4__stack .section4__card:nth-child(3) {
+      animation-range: contain 25% contain 50%;
+    }
+
+    .section4__stack .section4__card:nth-child(4) {
+      animation-range: contain 50% contain 75%;
+    }
+
+    .section4__stack .section4__card:nth-child(5) {
+      animation-range: contain 75% contain 100%;
+    }
+  }
+}
+
+@keyframes s4-card-enter {
+  0% {
+    opacity: 0;
+    transform: translate(120%, 200px);
+  }
+
+  4% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+}
+
 /* ---------- Focus ---------- */
 /* The stylesheet previously had no :focus or :focus-visible rule anywhere, so
    keyboard users navigated on whatever default the UA drew -- which on these

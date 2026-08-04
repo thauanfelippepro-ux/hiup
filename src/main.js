@@ -395,7 +395,15 @@ if (section4 && section4Cards.length > 1) {
       // opacity stays as a belt-and-braces gate: it costs nothing, and it means
       // an unexpected viewport where xPercent lands short still never shows a
       // card before its turn.
-      gsap.set(section4Cards.slice(1), { xPercent: 120, y: 200, opacity: 0 })
+      // Quando o CSS de scroll-driven animation cobre a entrada dos cards (o
+      // MESMO par media+supports do bloco "Section 4: entrada dos cards no
+      // compositor" no style.css), o GSAP fica fora do caminho: nem parking,
+      // nem tweens de entrada -- só o toggle da classe --lit no onUpdate.
+      // Animar o mesmo transform pelos dois lados seria os dois brigando
+      // frame a frame pelo mesmo estilo.
+      const cssCards = gridLockDisabled && CSS.supports('animation-timeline', 'view()')
+
+      if (!cssCards) gsap.set(section4Cards.slice(1), { xPercent: 120, y: 200, opacity: 0 })
 
       const gridLayers = gsap.utils.toArray('.grid-overlay__base, .grid-overlay__spotlight')
       const pinDistance = (section4Cards.length - 1) * STEP
@@ -441,12 +449,14 @@ if (section4 && section4Cards.length > 1) {
       // -- e são as duas seções que ficaram lisas no celular com o pin sticky,
       // enquanto esta continuou derrubando fps. O estado visual é a classe
       // --lit togglada no onUpdate acima, com o fade por transição CSS.
-      section4Cards.slice(1).forEach((next, i) => {
-        // Opaque from the very first frame of its own entrance -- while it is
-        // still below the fold, so nothing pops into view. It then rises into
-        // frame already solid instead of fading up as it goes.
-        tl.set(next, { opacity: 1 }, i).to(next, { xPercent: 0, y: 0, duration: 1, ease: 'power2.out' }, i)
-      })
+      if (!cssCards) {
+        section4Cards.slice(1).forEach((next, i) => {
+          // Opaque from the very first frame of its own entrance -- while it is
+          // still below the fold, so nothing pops into view. It then rises into
+          // frame already solid instead of fading up as it goes.
+          tl.set(next, { opacity: 1 }, i).to(next, { xPercent: 0, y: 0, duration: 1, ease: 'power2.out' }, i)
+        })
+      }
 
       return () => {
         stickyPin.cleanup()
@@ -878,8 +888,9 @@ if (splineViewer) {
   // a rendering one.
   const SPLINE_URL = splineViewer.getAttribute('url')
   let splineSuspended = false
+  let suspendIdleTimer = null
 
-  const suspendSpline = () => {
+  const doSuspend = () => {
     if (!splineReady || splineSuspended || !SPLINE_URL) return
     splineSuspended = true
     try {
@@ -889,7 +900,36 @@ if (splineViewer) {
     }
   }
 
+  // unload() derruba o contexto WebGL no instante em que o limiar de 250% é
+  // cruzado -- e esse limiar, medido, cai DENTRO do pin do team (~600px depois
+  // do início). A teardown no meio do arrasto era a travadinha relatada bem no
+  // começo daquela seção. O trabalho continua o mesmo; só o momento muda:
+  // agendado para depois de 200ms sem nenhum evento de scroll, quando não há
+  // frame de animação em que uma pausa possa aparecer.
+  const cancelQueuedSuspend = () => {
+    if (suspendIdleTimer !== null) clearTimeout(suspendIdleTimer)
+    suspendIdleTimer = null
+    window.removeEventListener('scroll', queueSuspendOnIdle)
+  }
+
+  function queueSuspendOnIdle() {
+    if (suspendIdleTimer !== null) clearTimeout(suspendIdleTimer)
+    suspendIdleTimer = setTimeout(() => {
+      cancelQueuedSuspend()
+      doSuspend()
+    }, 200)
+  }
+
+  const suspendSpline = () => {
+    if (!splineReady || splineSuspended || !SPLINE_URL) return
+    window.addEventListener('scroll', queueSuspendOnIdle, { passive: true, ...untilTeardown })
+    queueSuspendOnIdle()
+  }
+
   const resumeSpline = () => {
+    // Voltar para perto da cena cancela uma suspensão ainda na fila -- senão o
+    // timer dispara já dentro da zona onde a cena deveria estar de pé.
+    cancelQueuedSuspend()
     if (!splineReady || !splineSuspended) return
     splineSuspended = false
     try {
@@ -940,7 +980,12 @@ if (splineViewer) {
     document.addEventListener(
       'visibilitychange',
       () => {
-        if (document.visibilityState === 'hidden') suspendSpline()
+        // Aba oculta não apresenta frames, então aqui a suspensão é imediata:
+        // não existe travadinha visível para adiar.
+        if (document.visibilityState === 'hidden') {
+          cancelQueuedSuspend()
+          doSuspend()
+        }
       },
       untilTeardown,
     )
