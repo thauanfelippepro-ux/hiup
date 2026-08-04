@@ -195,6 +195,47 @@ const PIN_SCRUB = gridLockDisabled ? 0.08 : 0.35
 // it is the mode the pin-spacer maths there was verified against.
 const PIN_TYPE = gridLockDisabled ? 'transform' : 'fixed'
 
+// No touch, o ScrollTrigger não segura mais o bloco pinado. pinType:'transform'
+// (acima) reduziu a tremida mas não a eliminou, e não pode: o scroll roda no
+// compositor e a correção do pin roda na main thread, então o bloco chega
+// sempre um frame atrás do dedo -- título, cards e o 3D de fundo tremendo
+// juntos, porque é o container inteiro que atrasa. É a mesma classe de bug que
+// o grid tinha (correção por JS perseguindo o scroll), e a mesma cura: parar
+// de corrigir por JS o que o navegador faz sozinho.
+//
+// position:sticky é aplicado pelo compositor, na mesma passada do scroll, sem
+// JavaScript no caminho -- o container não TEM como atrasar. A seção recebe a
+// altura que o pin-spacer criaria (altura do pin + distância do scrub), o pin
+// vira sticky no topo, e o ScrollTrigger fica só com o timeline dos cards
+// (pin:false). A altura é re-medida a cada refreshInit porque o pin usa svh,
+// que muda quando a barra de endereço do celular recolhe.
+//
+// Desktop segue no pin fixed do ScrollTrigger: lá scroll e correção andam na
+// mesma thread, não há tremida, e é o modo em que a matemática do pin-spacer
+// foi verificada.
+const setupStickyPin = (sectionEl, pinEl, distance) => {
+  if (!gridLockDisabled || !pinEl) return { pin: pinEl, cleanup: () => {} }
+
+  const applyHeight = () => {
+    sectionEl.style.minHeight = ''
+    sectionEl.style.minHeight = `${pinEl.offsetHeight + distance}px`
+  }
+  pinEl.style.position = 'sticky'
+  pinEl.style.top = '0px'
+  applyHeight()
+  ScrollTrigger.addEventListener('refreshInit', applyHeight)
+
+  return {
+    pin: false,
+    cleanup: () => {
+      ScrollTrigger.removeEventListener('refreshInit', applyHeight)
+      pinEl.style.position = ''
+      pinEl.style.top = ''
+      sectionEl.style.minHeight = ''
+    },
+  }
+}
+
 const lockGridToViewport = (layers) => {
   if (gridLockDisabled) return
   layers.forEach((layer) => {
@@ -363,6 +404,7 @@ if (section4 && section4Cards.length > 1) {
 
       const gridLayers = gsap.utils.toArray('.grid-overlay__base, .grid-overlay__spotlight')
       const pinDistance = (section4Cards.length - 1) * STEP
+      const stickyPin = setupStickyPin(section4, document.querySelector('.section4__pin'), pinDistance)
 
       // The grid's compensating offset is driven by this SAME ScrollTrigger
       // (via onUpdate/self.progress) instead of a second, separate instance,
@@ -379,7 +421,7 @@ if (section4 && section4Cards.length > 1) {
           end: pinEnd,
           scrub: PIN_SCRUB,
           pinType: PIN_TYPE,
-          pin: '.section4__pin',
+          pin: stickyPin.pin,
           onEnter: () => lockGridToViewport(gridLayers),
           onEnterBack: () => lockGridToViewport(gridLayers),
           onLeave: () => releaseGrid(gridLayers),
@@ -406,6 +448,7 @@ if (section4 && section4Cards.length > 1) {
       })
 
       return () => {
+        stickyPin.cleanup()
         gsap.set(section4Cards.slice(1), { clearProps: 'transform,opacity' })
         clearGridStyles(gridLayers)
         gsap.set(
@@ -461,6 +504,7 @@ if (
 
       const pinDistance = (teamItems.length - 1) * STEP
       const gridLayers = gsap.utils.toArray('.grid-overlay__base, .grid-overlay__spotlight')
+      const stickyPin = setupStickyPin(team, document.querySelector('.team__pin'), pinDistance)
 
       gsap.set(teamStrip, { y: slideInitialY })
       gsap.set(teamList, { y: itemInitialY })
@@ -472,7 +516,7 @@ if (
           end: `+=${pinDistance}`,
           scrub: PIN_SCRUB,
           pinType: PIN_TYPE,
-          pin: '.team__pin',
+          pin: stickyPin.pin,
           onUpdate(self) {
             // Guarded on the index rather than running every frame: this used to
             // touch 14 elements on every scroll update to re-assert classes that
@@ -554,6 +598,7 @@ if (
       })
 
       return () => {
+        stickyPin.cleanup()
         list?.removeAttribute('role')
         list?.removeAttribute('aria-label')
         interactive.forEach((element) => {
@@ -593,6 +638,7 @@ if (process && processCards.length > 1) {
       lastProcessIndex = -1
       const gridLayers = gsap.utils.toArray('.grid-overlay__base, .grid-overlay__spotlight')
       const pinDistance = (processCards.length - 1) * STEP
+      const stickyPin = setupStickyPin(process, document.querySelector('.process__pin'), pinDistance)
 
       const tl = gsap.timeline({
         scrollTrigger: {
@@ -601,7 +647,7 @@ if (process && processCards.length > 1) {
           end: pinEnd,
           scrub: PIN_SCRUB,
           pinType: PIN_TYPE,
-          pin: '.process__pin',
+          pin: stickyPin.pin,
           onUpdate(self) {
             // Ceil (not round) so a card becomes the active/sharp one the instant
             // it starts sliding in, not halfway through its entrance — otherwise
@@ -660,6 +706,7 @@ if (process && processCards.length > 1) {
       })
 
       return () => {
+        stickyPin.cleanup()
         gsap.set(processCards, { clearProps: 'transform,filter' })
         processCards.forEach((c, i) => c.classList.toggle('process__card--active', i === 0))
         clearGridStyles(gridLayers)
