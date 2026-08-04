@@ -325,6 +325,15 @@ if (gridOverlay && spotlight) {
   window.addEventListener('resize', invalidateRect, untilTeardown)
 
   gridOverlay.addEventListener('pointermove', (event) => {
+    // Um dedo arrastando TAMBÉM dispara pointermove -- e este handler é um
+    // efeito de hover, que dedo não tem. Sem este guard, todo arrasto no
+    // celular reativava o spotlight (a camada de ~30 megapixels com filter +
+    // mix-blend-mode que a classe --idle existe para nunca compositar no
+    // touch) e, pior, pagava um getBoundingClientRect por frame de arrasto,
+    // porque cada evento de scroll invalida o rect logo abaixo. Era por isso
+    // que rolar com a RODA era liso e arrastar com o DEDO dava os pulinhos:
+    // só o dedo gera pointermove junto com o scroll.
+    if (event.pointerType === 'touch') return
     if (!overlayRect) overlayRect = spotlight.getBoundingClientRect()
     setX(event.clientX - overlayRect.left)
     setY(event.clientY - overlayRect.top)
